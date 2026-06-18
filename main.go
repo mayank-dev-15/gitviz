@@ -233,6 +233,7 @@ func main() {
 	mux.HandleFunc("GET /api/badge/download-all", handleBadgeDownloadAll)
 	mux.HandleFunc("POST /api/badge/upload", handleBadgeUpload)
 	mux.HandleFunc("POST /api/badge/upload-all", handleBadgeUploadAll)
+	mux.HandleFunc("GET /api/progress", handleProgressSSE)
 	mux.HandleFunc("GET /api/logout", handleLogout)
 	mux.HandleFunc("GET /api/settings", handleGetSettings)
 	mux.HandleFunc("POST /api/settings", handleSaveSettings)
@@ -364,11 +365,17 @@ func handleRepo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	publishProgress("validate", "Validating repository URL...", 5)
+
 	key := owner + "/" + repo
 	if cached := globalStore.GetCached(key); cached != nil {
+		publishProgress("cache", "Loaded from cache (fresh data)", 100)
+		publishDone()
 		writeJSON(w, cached)
 		return
 	}
+
+	publishProgress("auth", "Authenticating with GitHub...", 10)
 
 	var token string
 	sid := getSessionID(r)
@@ -381,13 +388,29 @@ func handleRepo(w http.ResponseWriter, r *http.Request) {
 		token = githubToken
 	}
 
+	publishProgress("fetch", fmt.Sprintf("Querying GitHub GraphQL API for %s/%s...", owner, repo), 20)
+
 	data, err := fetchRepoData(owner, repo, token)
 	if err != nil {
+		publishError("fetch failed: " + err.Error())
 		writeError(w, "fetch failed: "+err.Error(), 502)
 		return
 	}
 
+	publishProgress("process", "Processing commit history and author stats...", 70)
+	time.Sleep(50 * time.Millisecond)
+
+	publishProgress("languages", "Calculating language distribution...", 85)
+	time.Sleep(30 * time.Millisecond)
+
+	publishProgress("finalize", "Building data model...", 95)
+	time.Sleep(30 * time.Millisecond)
+
 	globalStore.SetCache(key, data)
+
+	publishProgress("done", "Analysis complete!", 100)
+	publishDone()
+
 	writeJSON(w, data)
 }
 

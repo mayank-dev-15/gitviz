@@ -758,11 +758,72 @@
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
+  function connectSSE() {
+    var es = new EventSource('/api/progress');
+    var logBody = $('logBody');
+    var progressFill = $('progressFill');
+    var progressGlow = $('progressGlow');
+    var progressPercent = $('progressPercent');
+    var loadingTitle = $('loadingTitle');
+    var logLines = [];
+
+    es.onmessage = function (e) {
+      var event = JSON.parse(e.data);
+
+      if (progressFill) {
+        progressFill.style.width = event.percent + '%';
+        progressGlow.style.width = event.percent + '%';
+      }
+      if (progressPercent) progressPercent.textContent = event.percent + '%';
+      if (loadingTitle && event.message) loadingTitle.textContent = event.message;
+
+      var time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      var line = document.createElement('div');
+      line.className = 'log-line' + (event.error ? ' error' : '');
+      line.innerHTML =
+        '<span class="log-time">' + esc(time) + '</span>' +
+        '<span class="log-stage ' + esc(event.stage) + '">' + esc(event.stage) + '</span>' +
+        '<span class="log-msg">' + esc(event.message) + '</span>';
+      logLines.push(line);
+      if (logBody) {
+        logBody.appendChild(line);
+        logBody.scrollTop = logBody.scrollHeight;
+      }
+
+      if (event.done || event.error) {
+        es.close();
+        setTimeout(function () {
+          if (progressFill) progressFill.style.width = '100%';
+          if (progressGlow) progressGlow.style.width = '100%';
+          if (progressPercent) progressPercent.textContent = '100%';
+        }, 200);
+      }
+    };
+
+    es.onerror = function () { es.close() };
+    return { es: es, logLines: logLines };
+  }
+
   async function analyze(url) {
-    loading.style.display = 'grid';
+    loading.style.display = 'block';
     clearError();
     dashboard.style.display = 'block';
     landing.style.display = 'none';
+
+    var progressFill = $('progressFill');
+    var progressGlow = $('progressGlow');
+    var progressPercent = $('progressPercent');
+    var logBody = $('logBody');
+    var loadingTitle = $('loadingTitle');
+
+    if (progressFill) progressFill.style.width = '0%';
+    if (progressGlow) progressGlow.style.width = '0%';
+    if (progressPercent) progressPercent.textContent = '0%';
+    if (logBody) logBody.innerHTML = '';
+    if (loadingTitle) loadingTitle.textContent = 'Analyzing repository...';
+
+    var sse = connectSSE();
+
     try {
       var data = await api('/api/repo?url=' + encodeURIComponent(url));
       showDashboard(data);

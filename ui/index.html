@@ -86,11 +86,25 @@
     </div>
   </div>
 
-  <div id="loading" class="loading-shimmer" style="display:none">
-    <div class="shimmer-card"></div>
-    <div class="shimmer-card"></div>
-    <div class="shimmer-card"></div>
-    <div class="shimmer-card"></div>
+  <div id="loading" class="loading-panel" style="display:none">
+    <div class="loading-card glass">
+      <div class="loading-orb"></div>
+      <div class="loading-title" id="loadingTitle">Analyzing repository...</div>
+      <div class="progress-track">
+        <div class="progress-fill" id="progressFill"></div>
+        <div class="progress-glow" id="progressGlow"></div>
+      </div>
+      <div class="progress-percent" id="progressPercent">0%</div>
+      <div class="log-panel" id="logPanel">
+        <div class="log-header">
+          <span class="log-dot green"></span>
+          <span class="log-dot yellow"></span>
+          <span class="log-dot red"></span>
+          <span class="log-title">Live Output</span>
+        </div>
+        <div class="log-body" id="logBody"></div>
+      </div>
+    </div>
   </div>
 
   <section id="statsGrid" class="stats-grid"></section>

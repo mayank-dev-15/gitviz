@@ -572,6 +572,248 @@ tr:hover .avatar { transform:scale(1.2) rotate(-5deg) }
 .settings-status.success { color:#3fb950 }
 .settings-status.error { color:#f85149 }
 
+/* ===== Loading Panel ===== */
+.loading-panel {
+  max-width:560px; margin:0 auto 32px;
+  animation:scaleIn .4s cubic-bezier(.16,1,.3,1);
+}
+.loading-card {
+  padding:40px 36px; text-align:center;
+  position:relative; overflow:hidden;
+}
+.loading-card::before {
+  content:''; position:absolute; top:-2px; left:-2px; right:-2px; bottom:-2px;
+  background:conic-gradient(from 0deg,transparent,#58a6ff,#bc8cff,#ff6b6b,transparent);
+  border-radius:14px; z-index:-1;
+  animation:loadingBorderSpin 3s linear infinite;
+}
+@keyframes loadingBorderSpin {
+  to { transform:rotate(360deg) }
+}
+.loading-card::after {
+  content:''; position:absolute; inset:2px;
+  background:rgba(13,17,23,.92); border-radius:12px; z-index:-1;
+}
+.loading-orb {
+  width:64px; height:64px; margin:0 auto 20px;
+  background:radial-gradient(circle at 30% 30%,#58a6ff,#bc8cff);
+  border-radius:50%; position:relative;
+  animation:orbPulse 2s ease-in-out infinite;
+}
+.loading-orb::before {
+  content:''; position:absolute; inset:-8px;
+  border:2px solid rgba(88,166,255,.2); border-radius:50%;
+  animation:orbRings 2s ease-in-out infinite;
+}
+.loading-orb::after {
+  content:''; position:absolute; inset:-16px;
+  border:1px solid rgba(188,140,255,.15); border-radius:50%;
+  animation:orbRings 2s ease-in-out infinite .3s;
+}
+@keyframes orbPulse {
+  0%,100% { transform:scale(1); box-shadow:0 0 20px rgba(88,166,255,.3) }
+  50% { transform:scale(1.08); box-shadow:0 0 40px rgba(88,166,255,.5),0 0 80px rgba(188,140,255,.2) }
+}
+@keyframes orbRings {
+  0%,100% { transform:scale(1); opacity:.5 }
+  50% { transform:scale(1.15); opacity:1 }
+}
+.loading-title {
+  font-size:16px; font-weight:600; color:#e6edf3; margin-bottom:20px;
+  animation:fadeUp .4s ease;
+}
+.progress-track {
+  height:6px; background:rgba(255,255,255,.06); border-radius:3px;
+  position:relative; overflow:hidden; margin-bottom:8px;
+}
+.progress-fill {
+  height:100%; width:0%; border-radius:3px;
+  background:linear-gradient(90deg,#58a6ff,#bc8cff,#ff6b6b);
+  background-size:200% 100%;
+  animation:progressGradient 2s linear infinite;
+  transition:width .4s cubic-bezier(.4,0,.2,1);
+  position:relative;
+}
+.progress-fill::after {
+  content:''; position:absolute; right:0; top:-4px;
+  width:14px; height:14px; border-radius:50%;
+  background:#fff; box-shadow:0 0 12px rgba(88,166,255,.8);
+  opacity:0; transition:opacity .3s;
+}
+.progress-fill[style*="width"]:not([style*="width: 0"])::after { opacity:1 }
+@keyframes progressGradient {
+  0% { background-position:0% 50% }
+  100% { background-position:200% 50% }
+}
+.progress-glow {
+  position:absolute; top:0; left:0; height:100%; width:0%;
+  background:rgba(88,166,255,.25); border-radius:3px; filter:blur(6px);
+  transition:width .4s cubic-bezier(.4,0,.2,1);
+}
+.progress-percent {
+  font-size:12px; color:#8b949e; margin-bottom:20px;
+  font-variant-numeric:tabular-nums;
+}
+
+/* ===== Log Panel ===== */
+.log-panel {
+  text-align:left; border-radius:8px; overflow:hidden;
+  border:1px solid rgba(255,255,255,.06);
+  background:rgba(0,0,0,.3);
+}
+.log-header {
+  display:flex; align-items:center; gap:6px; padding:8px 12px;
+  background:rgba(255,255,255,.03); border-bottom:1px solid rgba(255,255,255,.06);
+}
+.log-dot {
+  width:10px; height:10px; border-radius:50%;
+}
+.log-dot.green { background:#3fb950 }
+.log-dot.yellow { background:#d29922 }
+.log-dot.red { background:#f85149 }
+.log-title {
+  font-size:11px; color:#8b949e; font-weight:600; text-transform:uppercase;
+  letter-spacing:.5px; margin-left:6px;
+}
+.log-body {
+  padding:12px; max-height:180px; overflow-y:auto; font-family:'JetBrains Mono','Fira Code',monospace;
+  font-size:11px; line-height:1.7; scrollbar-width:thin; scrollbar-color:#30363d transparent;
+}
+.log-body::-webkit-scrollbar { width:4px }
+.log-body::-webkit-scrollbar-thumb { background:#30363d; border-radius:2px }
+.log-line {
+  display:flex; gap:10px; align-items:flex-start;
+  animation:logSlideIn .3s cubic-bezier(.16,1,.3,1) both;
+}
+@keyframes logSlideIn {
+  from { opacity:0; transform:translateX(-10px) }
+  to { opacity:1; transform:translateX(0) }
+}
+.log-time { color:#484f58; white-space:nowrap; min-width:55px }
+.log-stage {
+  font-weight:700; text-transform:uppercase; font-size:10px;
+  min-width:60px; white-space:nowrap; letter-spacing:.3px;
+}
+.log-stage.validate { color:#58a6ff }
+.log-stage.cache { color:#3fb950 }
+.log-stage.auth { color:#bc8cff }
+.log-stage.fetch { color:#f0c040 }
+.log-stage.process { color:#ff6b6b }
+.log-stage.languages { color:#d29922 }
+.log-stage.finalize { color:#58a6ff }
+.log-stage.done { color:#3fb950 }
+.log-stage.error { color:#f85149 }
+.log-msg { color:#c9d1d9 }
+.log-line.error .log-msg { color:#f85149 }
+
+/* ===== Upgraded Card Animations ===== */
+@keyframes cardReveal {
+  from { opacity:0; transform:translateY(40px) rotateX(8deg); filter:blur(4px) }
+  to { opacity:1; transform:translateY(0) rotateX(0); filter:blur(0) }
+}
+@keyframes cardHover3D {
+  0% { transform:perspective(800px) rotateX(0) rotateY(0) translateZ(0) }
+  25% { transform:perspective(800px) rotateX(-2deg) rotateY(1deg) translateZ(10px) }
+  50% { transform:perspective(800px) rotateX(1deg) rotateY(-1deg) translateZ(15px) }
+  75% { transform:perspective(800px) rotateX(-1deg) rotateY(0.5deg) translateZ(10px) }
+  100% { transform:perspective(800px) rotateX(0) rotateY(0) translateZ(0) }
+}
+@keyframes textGlow {
+  0%,100% { text-shadow:0 0 0 transparent }
+  50% { text-shadow:0 0 20px rgba(88,166,255,.3),0 0 40px rgba(188,140,255,.15) }
+}
+@keyframes numberTick {
+  0% { transform:translateY(100%); opacity:0 }
+  60% { transform:translateY(-5%); opacity:1 }
+  100% { transform:translateY(0); opacity:1 }
+}
+@keyframes iconFloat {
+  0%,100% { transform:translateY(0) rotate(0deg) }
+  25% { transform:translateY(-3px) rotate(-3deg) }
+  75% { transform:translateY(2px) rotate(2deg) }
+}
+@keyframes borderTrace {
+  0% { background-position:0% 50% }
+  100% { background-position:200% 50% }
+}
+@keyframes featureCardEnter {
+  0% { opacity:0; transform:translateY(60px) scale(.9) skewY(2deg) }
+  60% { transform:translateY(-4px) scale(1.01) skewY(-0.5deg) }
+  100% { opacity:1; transform:translateY(0) scale(1) skewY(0) }
+}
+@keyframes inputFocusPulse {
+  0%,100% { box-shadow:0 0 0 0 rgba(88,166,255,0) }
+  50% { box-shadow:0 0 0 4px rgba(88,166,255,.12) }
+}
+@keyframes heroTextReveal {
+  0% { opacity:0; transform:translateY(30px); filter:blur(8px) }
+  100% { opacity:1; transform:translateY(0); filter:blur(0) }
+}
+@keyframes badgeCardShine {
+  0% { background-position:-200% 0 }
+  100% { background-position:200% 0 }
+}
+@keyframes statNumberRoll {
+  0% { transform:rotateX(90deg); opacity:0 }
+  50% { transform:rotateX(-5deg) }
+  100% { transform:rotateX(0deg); opacity:1 }
+}
+@keyframes chartFadeIn {
+  0% { opacity:0; transform:scale(.95); filter:blur(4px) }
+  100% { opacity:1; transform:scale(1); filter:blur(0) }
+}
+
+/* ===== Apply Upgraded Animations ===== */
+.stat-card {
+  animation:cardReveal .5s cubic-bezier(.16,1,.3,1) both;
+  transition:transform .4s cubic-bezier(.16,1,.3,1), box-shadow .4s, border-color .4s;
+}
+.stat-card:hover {
+  animation:cardHover3D .6s ease-in-out;
+  border-color:rgba(88,166,255,.3);
+  box-shadow:0 16px 48px rgba(0,0,0,.4),0 0 30px rgba(88,166,255,.08);
+}
+.stat-number { animation:statNumberRoll .5s cubic-bezier(.16,1,.3,1) both }
+.stat-card:hover .stat-number { animation:textGlow 2s ease infinite }
+.stat-card:hover .stat-icon { animation:iconFloat 1.5s ease-in-out infinite }
+
+.feature-card {
+  animation:featureCardEnter .6s cubic-bezier(.16,1,.3,1) both;
+}
+.feature-card:hover {
+  transform:translateY(-6px) scale(1.02);
+  box-shadow:0 20px 60px rgba(0,0,0,.4),0 0 40px rgba(88,166,255,.06);
+}
+.feature-card:hover h3 { animation:textGlow 2s ease infinite }
+.feature-card:hover .feature-icon { animation:iconFloat 1s ease-in-out infinite }
+
+.chart-card {
+  animation:chartFadeIn .6s cubic-bezier(.16,1,.3,1) both;
+}
+.chart-card:hover {
+  transform:translateY(-2px);
+  box-shadow:0 12px 40px rgba(0,0,0,.3);
+}
+
+.badge-item {
+  animation:cardReveal .5s cubic-bezier(.16,1,.3,1) both;
+}
+.badge-item:hover {
+  animation:cardHover3D .6s ease-in-out;
+}
+.badge-item::after {
+  animation:badgeCardShine 3s linear infinite;
+}
+
+input:focus {
+  animation:inputFocusPulse 2s ease-in-out infinite;
+}
+
+.hero-title { animation:heroTextReveal .8s cubic-bezier(.16,1,.3,1) .1s both }
+.hero-sub { animation:heroTextReveal .8s cubic-bezier(.16,1,.3,1) .2s both }
+.hero-search { animation:heroTextReveal .8s cubic-bezier(.16,1,.3,1) .3s both }
+.hero-suggestions { animation:heroTextReveal .8s cubic-bezier(.16,1,.3,1) .4s both }
+
 /* ===== Responsive ===== */
 @media (max-width:768px) {
   .nav-inner { flex-wrap:wrap; height:auto; padding:12px 16px; gap:8px }
@@ -582,6 +824,7 @@ tr:hover .avatar { transform:scale(1.2) rotate(-5deg) }
   .charts-row { flex-direction:column }
   .features { grid-template-columns:1fr }
   .stats-grid { grid-template-columns:repeat(2,1fr) }
-  .loading-shimmer { grid-template-columns:repeat(2,1fr) }
   .badge-grid { grid-template-columns:1fr }
+  .loading-card { padding:28px 20px }
+  .loading-orb { width:48px; height:48px }
 }
