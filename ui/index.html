@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GitViz</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<nav>
+  <div class="nav-left">
+    <h1>GitViz</h1>
+    <div class="search-box">
+      <input type="text" id="repoInput" placeholder="https://github.com/user/repo" spellcheck="false">
+      <button id="analyzeBtn">Analyze</button>
+    </div>
+  </div>
+  <div class="nav-right">
+    <span id="userInfo"></span>
+    <button id="loginBtn">Login with GitHub</button>
+  </div>
+</nav>
+
+<main id="main" style="display:none">
+  <div id="loading" class="loading">Fetching repository data...</div>
+
+  <div id="error" class="error" style="display:none"></div>
+
+  <section id="overview">
+    <div class="stat-card"><span class="stat-icon">⭐</span><span class="stat-val" id="stars">0</span><span class="stat-label">Stars</span></div>
+    <div class="stat-card"><span class="stat-icon">🍴</span><span class="stat-val" id="forks">0</span><span class="stat-label">Forks</span></div>
+    <div class="stat-card"><span class="stat-icon">⚠</span><span class="stat-val" id="issues">0</span><span class="stat-label">Issues</span></div>
+    <div class="stat-card"><span class="stat-icon">🔀</span><span class="stat-val" id="prs">0</span><span class="stat-label">PRs</span></div>
+    <div class="stat-card"><span class="stat-icon">📄</span><span class="stat-val" id="license">-</span><span class="stat-label">License</span></div>
+    <div class="stat-card"><span class="stat-icon">🔤</span><span class="stat-val" id="lang">-</span><span class="stat-label">Language</span></div>
+  </section>
+
+  <div class="row">
+    <section class="col">
+      <h2>Languages</h2>
+      <canvas id="langChart" width="500" height="200"></canvas>
+    </section>
+    <section class="col">
+      <h2>Commit Activity</h2>
+      <canvas id="commitChart" width="500" height="200"></canvas>
+    </section>
+  </div>
+
+  <div class="row">
+    <section class="col">
+      <h2>Top Contributors <span id="busFactor" class="badge"></span></h2>
+      <div class="table-wrap">
+        <table id="contribTable">
+          <thead><tr><th></th><th>Contributor</th><th>Commits</th><th>Added</th><th>Deleted</th><th>%</th></tr></thead>
+          <tbody id="contribBody"></tbody>
+        </table>
+      </div>
+    </section>
+    <section class="col">
+      <h2>Recent Releases</h2>
+      <div id="releases"></div>
+    </section>
+  </div>
+
+  <section id="embedSection">
+    <h2>Embed Badge</h2>
+    <p>Add this to your README to show live stats:</p>
+    <code id="embedCode"></code>
+    <div id="badgePreview"></div>
+  </section>
+</main>
+
+<script src="app.js"></script>
+</body>
+</html>
