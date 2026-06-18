@@ -23,6 +23,9 @@
     <div class="nav-right">
       <span id="tokenInfo" class="token-badge"></span>
       <div id="userArea"></div>
+      <button id="settingsBtn" class="btn-gh" title="Settings">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      </button>
       <button id="loginBtn" class="btn-gh btn-github"><svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg> Sign in with GitHub</button>
     </div>
   </div>
@@ -95,7 +98,11 @@
   <div class="charts-row">
     <section class="chart-card glass" id="langSection">
       <h3 class="section-title">Language Breakdown</h3>
-      <canvas id="langChart" width="500" height="220"></canvas>
+      <canvas id="langChart" width="500" height="260"></canvas>
+    </section>
+    <section class="chart-card glass" id="starSection">
+      <h3 class="section-title">Repo Metrics</h3>
+      <canvas id="starChart" width="500" height="260"></canvas>
     </section>
     <section class="chart-card glass" id="commitSection">
       <h3 class="section-title">Commit Activity</h3>
@@ -120,12 +127,80 @@
   </div>
 
   <section class="chart-card glass" id="embedSection">
-    <h3 class="section-title">Embed Badge for README</h3>
-    <p class="section-desc">Copy this into your repository's README.md to show live stats:</p>
-    <div class="code-block"><code id="embedCode"></code><button id="copyBtn" class="btn-gh btn-sm">Copy</button></div>
+    <h3 class="section-title">Embed Badges for README</h3>
+    <p class="section-desc">Click any badge to copy the embed code. Download individual SVGs or grab all at once.</p>
+
+    <div class="badge-grid" id="badgeGrid"></div>
+
+    <div class="badge-actions">
+      <button id="uploadAllBtn" class="btn-gh btn-upload">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        Upload All to imgbb
+      </button>
+      <button id="downloadAllBtn" class="btn-gh">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Download All SVGs
+      </button>
+      <button id="copyAllBtn" class="btn-gh">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        Copy All Embed Codes
+      </button>
+    </div>
+    <div id="uploadStatus" class="upload-status" style="display:none"></div>
+
+    <div class="code-block" style="margin-top:16px">
+      <code id="embedCode"></code>
+      <button id="copyBtn" class="btn-gh btn-sm">Copy</button>
+    </div>
     <div id="badgePreview" class="badge-preview"></div>
   </section>
 </main>
+
+<!-- Settings Modal -->
+<div id="settingsModal" class="modal-overlay" style="display:none">
+  <div class="modal glass">
+    <div class="modal-header">
+      <h3>Settings</h3>
+      <button id="closeSettingsBtn" class="btn-gh btn-sm">&times;</button>
+    </div>
+    <p class="section-desc">Configure your API keys and tokens. All values are stored locally on your machine in <code>settings.json</code> and never sent anywhere except the respective APIs.</p>
+
+    <div class="settings-group">
+      <label class="settings-label">GitHub Personal Access Token</label>
+      <p class="settings-hint">Required. Generate at <a href="https://github.com/settings/tokens" target="_blank">github.com/settings/tokens</a>. Needs <code>repo</code> scope.</p>
+      <input type="password" id="settingsToken" class="settings-input" placeholder="ghp_xxxxxxxxxxxx">
+    </div>
+
+    <div class="settings-group">
+      <label class="settings-label">GitHub OAuth App Client ID</label>
+      <p class="settings-hint">Optional. Required only for "Sign in with GitHub" feature. Create at <a href="https://github.com/settings/developers" target="_blank">github.com/settings/developers</a>.</p>
+      <input type="text" id="settingsClientID" class="settings-input" placeholder="Iv23ctNGwnaty0r1PcMy">
+    </div>
+
+    <div class="settings-group">
+      <label class="settings-label">GitHub OAuth App Client Secret</label>
+      <p class="settings-hint">Optional. Paired with the Client ID above.</p>
+      <input type="password" id="settingsClientSecret" class="settings-input" placeholder="eb9f403eded7a31b9a6ec1fdbfd1b78deff491c0">
+    </div>
+
+    <div class="settings-group">
+      <label class="settings-label">imgbb API Key</label>
+      <p class="settings-hint">Optional. For uploading badges to the cloud. Get free key at <a href="https://api.imgbb.com/" target="_blank">api.imgbb.com</a>.</p>
+      <input type="password" id="settingsImgBB" class="settings-input" placeholder="529c9d39ee222cb3215338cf3e5a1969">
+    </div>
+
+    <div class="settings-group">
+      <label class="settings-label">Server Port</label>
+      <p class="settings-hint">Default: 8080</p>
+      <input type="text" id="settingsPort" class="settings-input" placeholder="8080">
+    </div>
+
+    <div class="settings-actions">
+      <button id="saveSettingsBtn" class="btn-primary">Save Settings</button>
+      <span id="settingsStatus" class="settings-status"></span>
+    </div>
+  </div>
+</div>
 
 <script src="app.js"></script>
 </body>

@@ -228,10 +228,17 @@ func main() {
 	mux.HandleFunc("GET /api/user/repos", handleUserRepos)
 	mux.HandleFunc("GET /api/repo", handleRepo)
 	mux.HandleFunc("GET /api/badge", handleBadge)
+	mux.HandleFunc("GET /api/badge/live", handleLiveBadge)
+	mux.HandleFunc("GET /api/badge/gif", handleGIFBadge)
+	mux.HandleFunc("GET /api/badge/download-all", handleBadgeDownloadAll)
+	mux.HandleFunc("POST /api/badge/upload", handleBadgeUpload)
+	mux.HandleFunc("POST /api/badge/upload-all", handleBadgeUploadAll)
 	mux.HandleFunc("GET /api/logout", handleLogout)
+	mux.HandleFunc("GET /api/settings", handleGetSettings)
+	mux.HandleFunc("POST /api/settings", handleSaveSettings)
 
-	exe, _ := os.Executable()
-	uiDir := filepath.Join(filepath.Dir(exe), "ui")
+	cwd, _ := os.Getwd()
+	uiDir := filepath.Join(cwd, "ui")
 	mux.Handle("GET /", http.FileServer(http.Dir(uiDir)))
 
 	handler := corsMiddleware(logMiddleware(mux))
@@ -409,7 +416,7 @@ func handleUserRepos(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	req, _ := http.NewRequest("GET", "https://api.github.com/users/mayank-dev-15/repos?sort=updated&per_page=30", nil)
+	req, _ := http.NewRequest("GET", "https://api.github.com/user/repos?sort=updated&per_page=30", nil)
 	req.Header.Set("Authorization", "Bearer "+token)
 	req.Header.Set("User-Agent", "GitViz")
 
