@@ -62,15 +62,23 @@ func applySettings() {
 
 	if currentSettings.GitHubClientID != "" {
 		githubClientID = currentSettings.GitHubClientID
+	} else if githubClientID == "" {
+		githubClientID = getDecryptedClientID()
 	}
 	if currentSettings.GitHubClientSecret != "" {
 		githubClientSecret = currentSettings.GitHubClientSecret
+	} else if githubClientSecret == "" {
+		githubClientSecret = getDecryptedClientSecret()
 	}
 	if currentSettings.GitHubToken != "" {
 		githubToken = currentSettings.GitHubToken
+	} else if githubToken == "" {
+		githubToken = getDecryptedToken()
 	}
 	if currentSettings.ImgBBAPIKey != "" {
 		imgbbAPIKey = currentSettings.ImgBBAPIKey
+	} else if imgbbAPIKey == "" {
+		imgbbAPIKey = getDecryptedImgBB()
 	}
 }
 

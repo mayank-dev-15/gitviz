@@ -1,950 +1,730 @@
-(function () {
-  'use strict';
+(function(){
+'use strict';
 
-  var currentData = null;
-  var currentUser = null;
+var currentData=null,currentUser=null;
+function $(id){return document.getElementById(id)}
 
-  function $(id) { return document.getElementById(id) }
+// ===== Background Canvas =====
+var bgCanvas=$('bgCanvas'),ctx=bgCanvas.getContext('2d');
+var W,H,bgParticles=[];
+function resizeBg(){W=bgCanvas.width=window.innerWidth;H=bgCanvas.height=window.innerHeight}
+resizeBg();window.addEventListener('resize',resizeBg);
 
-  // ===== Cursor Glow Trail =====
-  var cursorGlow = document.createElement('div');
-  cursorGlow.className = 'cursor-glow';
-  document.body.appendChild(cursorGlow);
-  var mouseX = 0, mouseY = 0, glowX = 0, glowY = 0;
-  document.addEventListener('mousemove', function (e) {
-    mouseX = e.clientX; mouseY = e.clientY;
+for(var i=0;i<60;i++){
+  bgParticles.push({
+    x:Math.random()*W,y:Math.random()*H,
+    vx:(Math.random()-.5)*.3,vy:(Math.random()-.5)*.3,
+    r:Math.random()*1.5+.5,a:Math.random()*.4+.1,
+    hue:Math.random()*60+200
   });
-  (function animGlow() {
-    glowX += (mouseX - glowX) * 0.08;
-    glowY += (mouseY - glowY) * 0.08;
-    cursorGlow.style.left = glowX + 'px';
-    cursorGlow.style.top = glowY + 'px';
-    requestAnimationFrame(animGlow);
-  })();
+}
+var mouseX=0,mouseY=0;
+document.addEventListener('mousemove',function(e){mouseX=e.clientX;mouseY=e.clientY});
 
-  // ===== Floating Particles =====
-  var particlesCanvas = document.createElement('canvas');
-  particlesCanvas.className = 'particles-canvas';
-  document.body.appendChild(particlesCanvas);
-  var pCtx = particlesCanvas.getContext('2d');
-  var particles = [];
-  var PARTICLE_COUNT = 40;
-
-  function resizeParticles() {
-    particlesCanvas.width = window.innerWidth;
-    particlesCanvas.height = window.innerHeight;
-  }
-  resizeParticles();
-  window.addEventListener('resize', resizeParticles);
-
-  for (var i = 0; i < PARTICLE_COUNT; i++) {
-    particles.push({
-      x: Math.random() * window.innerWidth,
-      y: Math.random() * window.innerHeight,
-      vx: (Math.random() - 0.5) * 0.3,
-      vy: (Math.random() - 0.5) * 0.3,
-      r: Math.random() * 2 + 0.5,
-      a: Math.random() * 0.3 + 0.1,
-      hue: Math.random() * 60 + 200
-    });
-  }
-
-  function animParticles() {
-    pCtx.clearRect(0, 0, particlesCanvas.width, particlesCanvas.height);
-    particles.forEach(function (p) {
-      var dx = mouseX - p.x;
-      var dy = mouseY - p.y;
-      var dist = Math.sqrt(dx * dx + dy * dy);
-      if (dist < 200) {
-        p.vx -= dx * 0.00003;
-        p.vy -= dy * 0.00003;
-      }
-      p.x += p.vx;
-      p.y += p.vy;
-      if (p.x < 0) p.x = particlesCanvas.width;
-      if (p.x > particlesCanvas.width) p.x = 0;
-      if (p.y < 0) p.y = particlesCanvas.height;
-      if (p.y > particlesCanvas.height) p.y = 0;
-      pCtx.beginPath();
-      pCtx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-      pCtx.fillStyle = 'hsla(' + p.hue + ',60%,70%,' + p.a + ')';
-      pCtx.fill();
-    });
-    particles.forEach(function (a) {
-      particles.forEach(function (b) {
-        var dx = a.x - b.x;
-        var dy = a.y - b.y;
-        var d = Math.sqrt(dx * dx + dy * dy);
-        if (d < 120 && d > 0) {
-          pCtx.beginPath();
-          pCtx.moveTo(a.x, a.y);
-          pCtx.lineTo(b.x, b.y);
-          pCtx.strokeStyle = 'rgba(88,166,255,' + (0.06 * (1 - d / 120)) + ')';
-          pCtx.lineWidth = 0.5;
-          pCtx.stroke();
-        }
-      });
-    });
-    requestAnimationFrame(animParticles);
-  }
-  animParticles();
-
-  // ===== Button Ripple Effects =====
-  document.addEventListener('click', function (e) {
-    var btn = e.target.closest('button');
-    if (!btn) return;
-    var ripple = document.createElement('span');
-    ripple.className = 'ripple-effect';
-    var rect = btn.getBoundingClientRect();
-    var x = e.clientX - rect.left;
-    var y = e.clientY - rect.top;
-    ripple.style.left = x + 'px';
-    ripple.style.top = y + 'px';
-    btn.appendChild(ripple);
-    setTimeout(function () { ripple.remove() }, 600);
+function animBg(){
+  ctx.clearRect(0,0,W,H);
+  bgParticles.forEach(function(p){
+    var dx=mouseX-p.x,dy=mouseY-p.y,dist=Math.sqrt(dx*dx+dy*dy);
+    if(dist<180){p.vx-=dx*.00004;p.vy-=dy*.00004}
+    p.x+=p.vx;p.y+=p.vy;
+    if(p.x<0)p.x=W;if(p.x>W)p.x=0;if(p.y<0)p.y=H;if(p.y>H)p.y=0;
+    ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+    ctx.fillStyle='hsla('+p.hue+',70%,70%,'+p.a+')';ctx.fill();
   });
-
-  // ===== Scroll Reveal Observer =====
-  var revealObserver = new IntersectionObserver(function (entries) {
-    entries.forEach(function (entry) {
-      if (entry.isIntersecting) {
-        entry.target.classList.add('visible');
-        revealObserver.unobserve(entry.target);
+  for(var a=0;a<bgParticles.length;a++){
+    for(var b=a+1;b<bgParticles.length;b++){
+      var dx=bgParticles[a].x-bgParticles[b].x,dy=bgParticles[a].y-bgParticles[b].y;
+      var dist=Math.sqrt(dx*dx+dy*dy);
+      if(dist<120){
+        ctx.beginPath();ctx.moveTo(bgParticles[a].x,bgParticles[a].y);
+        ctx.lineTo(bgParticles[b].x,bgParticles[b].y);
+        ctx.strokeStyle='rgba(88,166,255,'+(1-dist/120)*.12+')';
+        ctx.lineWidth=.5;ctx.stroke();
       }
-    });
-  }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
-
-  function setupReveal() {
-    document.querySelectorAll('.chart-card, .badge-item, .stat-card').forEach(function (el) {
-      el.classList.add('reveal');
-      revealObserver.observe(el);
-    });
-  }
-
-  // ===== Chart Tooltip System =====
-  var tooltip = document.createElement('div');
-  tooltip.style.cssText = 'position:fixed;z-index:9999;background:rgba(13,17,23,.95);border:1px solid rgba(88,166,255,.2);border-radius:8px;padding:8px 12px;font-size:12px;color:#e6edf3;pointer-events:none;opacity:0;transition:opacity .15s;backdrop-filter:blur(8px);box-shadow:0 8px 24px rgba(0,0,0,.4);font-family:"Comic Sans MS",cursive';
-  document.body.appendChild(tooltip);
-
-  function showTooltip(e, text) {
-    tooltip.textContent = text;
-    tooltip.style.opacity = '1';
-    tooltip.style.left = (e.clientX + 12) + 'px';
-    tooltip.style.top = (e.clientY - 10) + 'px';
-  }
-  function hideTooltip() { tooltip.style.opacity = '0' }
-
-  var repoInput = $('repoInput');
-  var analyzeBtn = $('analyzeBtn');
-  var heroInput = $('heroInput');
-  var heroBtn = $('heroBtn');
-  var loginBtn = $('loginBtn');
-  var userArea = $('userArea');
-  var landing = $('landing');
-  var dashboard = $('dashboard');
-  var loading = $('loading');
-  var repoName = $('repoName');
-  var repoDesc = $('repoDesc');
-  var statsGrid = $('statsGrid');
-  var langCanvas = $('langChart');
-  var starCanvas = $('starChart');
-  var commitCanvas = $('commitChart');
-  var contribBody = $('contribBody');
-  var busFactorBadge = $('busFactorBadge');
-  var releaseList = $('releaseList');
-  var embedCode = $('embedCode');
-  var copyBtn = $('copyBtn');
-  var badgePreview = $('badgePreview');
-  var tokenInfo = $('tokenInfo');
-  var newAnalysisBtn = $('newAnalysisBtn');
-
-  function esc(s) { return String(s).replace(/[&<>"']/g, function (m) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m] }) }
-
-  function animateCount(el, target) {
-    var current = 0;
-    var step = Math.max(1, Math.floor(target / 40));
-    var interval = setInterval(function () {
-      current += step;
-      if (current >= target) { current = target; clearInterval(interval) }
-      el.textContent = current;
-    }, 20);
-  }
-
-  function showError(msg) {
-    loading.style.display = 'none';
-    var err = document.createElement('div');
-    err.className = 'chart-card glass';
-    err.style.cssText = 'text-align:center;padding:40px;color:#f85149;animation:fadeIn .3s';
-    err.textContent = msg;
-    var parent = dashboard.querySelector('.charts-row');
-    if (parent) parent.before(err);
-    else dashboard.appendChild(err);
-  }
-
-  function clearError() {
-    dashboard.querySelectorAll('.chart-card[style*="color:#f85149"]').forEach(function (e) { e.remove() });
-  }
-
-  async function api(url) {
-    var r = await fetch(url);
-    if (!r.ok) {
-      var body = await r.json().catch(function () { return {} });
-      throw new Error(body.error || 'Request failed (' + r.status + ')');
-    }
-    return r.json();
-  }
-
-  // ---- Auth ----
-  async function checkAuth() {
-    try {
-      var data = await api('/api/user');
-      currentUser = data;
-      if (data.logged_in) {
-        userArea.innerHTML = '<div class="user-badge" style="display:flex;align-items:center;gap:6px"><img src="' + esc(data.avatar_url) + '" class="avatar" alt="" style="width:22px;height:22px;border-radius:50%">' + esc(data.login) + '</div>';
-        loginBtn.style.display = 'none';
-        loadUserRepos();
-      } else if (data.token_mode) {
-        tokenInfo.style.display = 'inline-block';
-        tokenInfo.textContent = 'Token Active';
-        loginBtn.style.display = 'none';
-      } else {
-        userArea.innerHTML = '';
-        tokenInfo.style.display = 'none';
-        loginBtn.style.display = 'flex';
-      }
-    } catch (e) {
-      userArea.innerHTML = '';
     }
   }
+  requestAnimationFrame(animBg);
+}
+animBg();
 
-  async function loadUserRepos() {
-    try {
-      var repos = await api('/api/user/repos');
-      if (!repos || repos.length === 0) return;
-      var publicRepos = repos.filter(function (r) { return !r.private && !r.fork }).slice(0, 12);
-      if (publicRepos.length === 0) return;
+// ===== Cursor Glow =====
+var cursorGlow=$('cursor-glow');
+var glowX=0,glowY=0;
+(function animGlow(){
+  glowX+=(mouseX-glowX)*.06;glowY+=(mouseY-glowY)*.06;
+  cursorGlow.style.left=glowX+'px';cursorGlow.style.top=glowY+'px';
+  requestAnimationFrame(animGlow);
+})();
 
-      var suggestions = document.querySelector('.hero-suggestions');
-      if (!suggestions) return;
+// ===== Typewriter =====
+var typewriterEl=$('typewriter');
+var twWords=['GitHub repository','codebase','project','open-source repo'];
+var twIdx=0,twCharIdx=0,twDeleting=false,twPause=0;
+function typeAnim(){
+  var word=twWords[twIdx];
+  if(!twDeleting){
+    typewriterEl.textContent=word.substring(0,twCharIdx+1);
+    twCharIdx++;
+    if(twCharIdx>=word.length){twDeleting=true;twPause=80}
+  }else{
+    if(twPause>0){twPause--;requestAnimationFrame(typeAnim);return}
+    typewriterEl.textContent=word.substring(0,twCharIdx-1);
+    twCharIdx--;
+    if(twCharIdx<=0){twDeleting=false;twIdx=(twIdx+1)%twWords.length}
+  }
+  setTimeout(typeAnim,twDeleting?40:80);
+}
+typeAnim();
 
-      var header = suggestions.querySelector('span');
-      var chips = suggestions.querySelectorAll('.chip');
-      suggestions.innerHTML = '<span>Your repos:</span>';
-      publicRepos.forEach(function (r) {
-        var btn = document.createElement('button');
-        btn.className = 'chip';
-        btn.textContent = r.full_name;
-        btn.dataset.repo = r.html_url;
-        btn.addEventListener('click', function () { triggerAnalyze(r.html_url) });
-        suggestions.appendChild(btn);
+// ===== Landing Stats Counter =====
+function animateLandingStats(){
+  var nums=document.querySelectorAll('.ls-num');
+  nums.forEach(function(el){
+    var target=parseInt(el.dataset.target)||0;
+    var current=0;var step=Math.max(1,Math.floor(target/50));
+    var iv=setInterval(function(){
+      current+=step;if(current>=target){current=target;clearInterval(iv)}
+      el.textContent=current;
+    },25);
+  });
+}
+animateLandingStats();
+
+// ===== Scroll Reveal =====
+function setupReveal(){
+  document.querySelectorAll('.fcard').forEach(function(el,i){
+    el.style.animationDelay=(i*100)+'ms';
+  });
+  var obs=new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if(e.isIntersecting){e.target.classList.add('visible');obs.unobserve(e.target)}
+    });
+  },{threshold:.15});
+  document.querySelectorAll('.fcard,.chart-card,.stat-card').forEach(function(el){obs.observe(el)});
+}
+setupReveal();
+
+// ===== Button Ripple =====
+document.addEventListener('click',function(e){
+  var btn=e.target.closest('button');if(!btn)return;
+  var r=document.createElement('span');r.className='ripple-effect';
+  var rect=btn.getBoundingClientRect();
+  r.style.left=(e.clientX-rect.left)+'px';r.style.top=(e.clientY-rect.top)+'px';
+  btn.appendChild(r);setTimeout(function(){r.remove()},600);
+});
+
+// ===== DOM References =====
+var repoInput=$('repoInput'),analyzeBtn=$('analyzeBtn');
+var heroInput=$('heroInput'),heroBtn=$('heroBtn');
+var loginBtn=$('loginBtn'),userArea=$('userArea');
+var landing=$('landing'),dashboard=$('dashboard'),loading=$('loading');
+var repoName=$('repoName'),repoDesc=$('repoDesc'),repoMeta=$('repoMeta'),repoLink=$('repoLink');
+var repoHeader=$('repoHeader');
+var statsGrid=$('statsGrid');
+var langCanvas=$('langChart'),starCanvas=$('starChart'),commitCanvas=$('commitChart');
+var langBars=$('langBars');
+var contribBody=$('contribBody'),busFactorBadge=$('busFactorBadge');
+var releaseList=$('releaseList');
+var embedCode=$('embedCode'),copyBtn=$('copyBtn'),badgePreview=$('badgePreview');
+var tokenInfo=$('tokenInfo'),newAnalysisBtn=$('newAnalysisBtn');
+
+function esc(s){return String(s).replace(/[&<>"']/g,function(m){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]})}
+
+function formatNum(n){
+  if(n>=1e6)return(n/1e6).toFixed(1)+'M';
+  if(n>=1e3)return(n/1e3).toFixed(1)+'K';
+  return String(n);
+}
+
+function animateCount(el,target){
+  var current=0;var step=Math.max(1,Math.floor(target/40));
+  var iv=setInterval(function(){
+    current+=step;if(current>=target){current=target;clearInterval(iv)}
+    el.textContent=formatNum(current);
+  },20);
+}
+
+// ===== SSE Progress =====
+function connectSSE(){
+  var es=new EventSource('/api/progress');
+  var logBody=$('logBody'),progressFill=$('progressFill'),progressGlow=$('progressGlow');
+  var progressPercent=$('progressPercent'),loadingTitle=$('loadingTitle');
+
+  es.onmessage=function(e){
+    var ev=JSON.parse(e.data);
+    if(progressFill)progressFill.style.width=ev.percent+'%';
+    if(progressGlow)progressGlow.style.width=ev.percent+'%';
+    if(progressPercent)progressPercent.textContent=ev.percent+'%';
+    if(loadingTitle&&ev.message)loadingTitle.textContent=ev.message;
+
+    var time=new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+    var line=document.createElement('div');
+    line.className='log-line'+(ev.error?' error':'');
+    line.innerHTML='<span class="log-time">'+esc(time)+'</span><span class="log-stage '+esc(ev.stage)+'">'+esc(ev.stage)+'</span><span class="log-msg">'+esc(ev.message)+'</span>';
+    if(logBody){logBody.appendChild(line);logBody.scrollTop=logBody.scrollHeight}
+
+    if(ev.done||ev.error){es.close();setTimeout(function(){
+      if(progressFill)progressFill.style.width='100%';
+      if(progressGlow)progressGlow.style.width='100%';
+      if(progressPercent)progressPercent.textContent='100%';
+    },200)}
+  };
+  es.onerror=function(){es.close()};
+  return es;
+}
+
+// ===== Upload Progress Log =====
+function addUploadLog(stage,msg){
+  var body=$('uploadLogBody');if(!body)return;
+  var time=new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  var line=document.createElement('div');
+  line.className='log-line';
+  line.innerHTML='<span class="log-time">'+esc(time)+'</span><span class="log-stage '+esc(stage)+'">'+esc(stage)+'</span><span class="log-msg">'+esc(msg)+'</span>';
+  body.appendChild(line);body.scrollTop=body.scrollHeight;
+}
+
+// ===== API =====
+async function api(url){
+  var r=await fetch(url);
+  var t=await r.text();
+  try{return JSON.parse(t)}catch(e){throw new Error(t||'Request failed')}
+}
+
+function showError(msg){
+  loading.style.display='none';
+  var err=document.createElement('div');
+  err.className='chart-card glass';
+  err.style.cssText='text-align:center;padding:40px;color:#f85149;animation:fadeIn .3s';
+  err.textContent=msg;
+  dashboard.insertBefore(err,repoHeader.nextSibling);
+}
+function clearError(){
+  dashboard.querySelectorAll('.chart-card[style*="color:#f85149"]').forEach(function(e){e.remove()});
+}
+
+// ===== Analyze =====
+async function analyze(url){
+  loading.style.display='block';
+  clearError();
+  dashboard.style.display='block';
+  landing.style.display='none';
+  repoHeader.style.display='none';
+  $('newAnalysisBtn').style.display='none';
+
+  var pf=$('progressFill'),pg=$('progressGlow'),pp=$('progressPercent'),lt=$('loadingTitle'),lb=$('logBody');
+  if(pf)pf.style.width='0%';if(pg)pg.style.width='0%';if(pp)pp.textContent='0%';
+  if(lb)lb.innerHTML='';if(lt)lt.textContent='Analyzing repository...';
+
+  var sse=connectSSE();
+  try{
+    var data=await api('/api/repo?url='+encodeURIComponent(url));
+    showDashboard(data);
+  }catch(e){
+    loading.style.display='none';
+    showError(e.message);
+  }
+}
+
+function triggerAnalyze(url){
+  if(!url)return;
+  if(!url.match(/github\.com\//)){
+    if(url.match(/^[\w.-]+\/[\w.-]+$/)){url='https://github.com/'+url}
+    else{showError('Enter a GitHub URL or "user/repo" format');return}
+  }
+  analyze(url);
+}
+
+// ===== Show Dashboard =====
+function showDashboard(data){
+  currentData=data;
+  landing.style.display='none';
+  dashboard.style.display='block';
+  loading.style.display='none';
+  repoHeader.style.display='flex';
+  newAnalysisBtn.style.display='flex';
+  clearError();
+
+  repoName.textContent=data.full_name;
+  repoDesc.textContent=data.description||'No description';
+  repoLink.href=data.url;
+
+  // Meta tags
+  var meta='';
+  if(data.license)meta+='<span class="rh-tag">'+esc(data.license)+'</span>';
+  if(data.primary_lang)meta+='<span class="rh-tag">● '+esc(data.primary_lang)+'</span>';
+  if(data.releases&&data.releases.length)meta+='<span class="rh-tag">'+data.releases.length+' releases</span>';
+  meta+='<span class="rh-tag">Updated '+new Date(data.fetched_at).toLocaleDateString()+'</span>';
+  repoMeta.innerHTML=meta;
+
+  renderStats(data);
+  renderLangBars(data.languages);
+  drawLangChart(data.languages);
+  drawStarGraph(data,data.stats);
+  drawCommitChart(data.stats.weekly_commits);
+  renderContributors(data.stats.authors);
+  renderReleases(data.releases);
+  renderEmbed(data);
+  setupReveal();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ===== Stats =====
+function renderStats(data){
+  var stats=[
+    {icon:'⭐',label:'Stars',value:data.stars},
+    {icon:'🍴',label:'Forks',value:data.forks},
+    {icon:'❗',label:'Issues',value:data.open_issues},
+    {icon:'🔀',label:'Pull Requests',value:data.open_prs},
+    {icon:'📝',label:'Commits',value:data.stats.total_commits},
+    {icon:'👥',label:'Contributors',value:data.stats.authors?data.stats.authors.length:0},
+    {icon:'📦',label:'Releases',value:data.releases?data.releases.length:0},
+    {icon:'➕',label:'Additions',value:data.stats.total_additions},
+    {icon:'➖',label:'Deletions',value:data.stats.total_deletions},
+    {icon:'🛡️',label:'Bus Factor',value:data.stats.bus_factor}
+  ];
+  statsGrid.innerHTML='';
+  stats.forEach(function(s,i){
+    var card=document.createElement('div');
+    card.className='stat-card';
+    card.style.animationDelay=(i*60)+'ms';
+    card.innerHTML='<span class="stat-icon">'+s.icon+'</span><span class="stat-number" data-target="'+s.value+'">0</span><span class="stat-label">'+s.label+'</span>';
+    statsGrid.appendChild(card);
+    var numEl=card.querySelector('.stat-number');
+    setTimeout(function(){animateCount(numEl,s.value)},200+i*60);
+  });
+}
+
+// ===== Language Bars =====
+function renderLangBars(langs){
+  if(!langs||!langs.length){langBars.innerHTML='';return}
+  langBars.innerHTML='';
+  langs.forEach(function(l,i){
+    var row=document.createElement('div');row.className='lang-bar-row';
+    row.innerHTML='<span class="lang-bar-name">'+esc(l.name)+'</span><div class="lang-bar-track"><div class="lang-bar-fill" style="width:0%;background:'+esc(l.color)+'" data-w="'+Math.round(l.pct)+'%"></div></div><span class="lang-bar-pct">'+l.pct.toFixed(1)+'%</span>';
+    langBars.appendChild(row);
+    setTimeout(function(){
+      row.querySelector('.lang-bar-fill').style.width=Math.round(l.pct)+'%';
+    },300+i*100);
+  });
+}
+
+// ===== Donut Chart =====
+function drawLangChart(langs){
+  var canvas=langCanvas,ctx2=canvas.getContext('2d');
+  var dpr=window.devicePixelRatio||1;
+  canvas.width=canvas.offsetWidth*dpr;canvas.height=280*dpr;
+  ctx2.scale(dpr,dpr);
+  var W=canvas.offsetWidth,H=280;
+  var cx=W/2,cy=H/2,R=Math.min(W,H)/2-30,r=R*.55;
+  if(!langs||!langs.length)return;
+
+  var total=langs.reduce(function(a,b){return a+b.bytes},0);
+  var angle=-Math.PI/2;
+  var animProgress=0;
+
+  function draw(){
+    ctx2.clearRect(0,0,W,H);
+    var currentAngle=-Math.PI/2;
+    langs.forEach(function(l){
+      var sweep=(l.bytes/total)*Math.PI*2*animProgress;
+      ctx2.beginPath();ctx2.moveTo(cx+r*Math.cos(currentAngle),cy+r*Math.sin(currentAngle));
+      ctx2.arc(cx,cy,R,currentAngle,currentAngle+sweep);
+      ctx2.arc(cx,cy,r,currentAngle+sweep,currentAngle,true);
+      ctx2.closePath();
+      ctx2.fillStyle=l.color;ctx2.fill();
+      currentAngle+=sweep;
+    });
+    // Center hole
+    ctx2.beginPath();ctx2.arc(cx,cy,r-1,0,Math.PI*2);
+    ctx2.fillStyle='rgba(13,17,23,.9)';ctx2.fill();
+    // Center text
+    ctx2.fillStyle='#f0f6fc';ctx2.font='bold 22px Inter,system-ui';ctx2.textAlign='center';ctx2.textBaseline='middle';
+    ctx2.fillText(langs.length,cx,cy-8);
+    ctx2.fillStyle='#8b949e';ctx2.font='12px Inter,system-ui';
+    ctx2.fillText('languages',cx,cy+12);
+    // Legend
+    var lx=W-140,ly=20;
+    langs.forEach(function(l){
+      ctx2.fillStyle=l.color;ctx2.fillRect(lx,ly,10,10);
+      ctx2.fillStyle='#c9d1d9';ctx2.font='11px Inter,system-ui';ctx2.textAlign='left';
+      ctx2.fillText(l.name+' '+l.pct.toFixed(0)+'%',lx+16,ly+9);
+      ly+=20;
+    });
+    if(animProgress<1){animProgress+=.03;requestAnimationFrame(draw)}
+  }
+  draw();
+}
+
+// ===== Radar Chart =====
+function drawStarGraph(data,stats){
+  var canvas=starCanvas,ctx2=canvas.getContext('2d');
+  var dpr=window.devicePixelRatio||1;
+  canvas.width=canvas.offsetWidth*dpr;canvas.height=280*dpr;
+  ctx2.scale(dpr,dpr);
+  var W=canvas.offsetWidth,H=280;
+  var cx=W/2,cy=H/2,R=Math.min(W,H)/2-40;
+
+  var metrics=[
+    {label:'Stars',value:Math.min(data.stars/100,1)},
+    {label:'Forks',value:Math.min(data.forks/50,1)},
+    {label:'Issues',value:data.open_issues>0?Math.min(data.open_issues/20,1):0},
+    {label:'Contributors',value:Math.min((stats.authors?stats.authors.length:0)/10,1)},
+    {label:'Commits',value:Math.min(stats.total_commits/500,1)},
+    {label:'Releases',value:Math.min((data.releases?data.releases.length:0)/10,1)},
+    {label:'Bus Factor',value:Math.min(stats.bus_factor/5,1)},
+    {label:'Activity',value:stats.weekly_commits?Math.min(stats.weekly_commits.length/10,1):0}
+  ];
+  var n=metrics.length;
+  var animP=0;
+
+  function draw(){
+    ctx2.clearRect(0,0,W,H);
+    // Grid
+    for(var ring=1;ring<=5;ring++){
+      ctx2.beginPath();
+      for(var i=0;i<=n;i++){
+        var angle=(Math.PI*2/n)*i-Math.PI/2;
+        var rr=R*ring/5;
+        var px=cx+rr*Math.cos(angle),py=cy+rr*Math.sin(angle);
+        if(i===0)ctx2.moveTo(px,py);else ctx2.lineTo(px,py);
+      }
+      ctx2.strokeStyle='rgba(255,255,255,.04)';ctx2.lineWidth=1;ctx2.stroke();
+    }
+    // Axes
+    for(var i=0;i<n;i++){
+      var angle=(Math.PI*2/n)*i-Math.PI/2;
+      ctx2.beginPath();ctx2.moveTo(cx,cy);
+      ctx2.lineTo(cx+R*Math.cos(angle),cy+R*Math.sin(angle));
+      ctx2.strokeStyle='rgba(255,255,255,.06)';ctx2.stroke();
+    }
+    // Data polygon
+    ctx2.beginPath();
+    for(var i=0;i<=n;i++){
+      var idx=i%n;
+      var angle=(Math.PI*2/n)*idx-Math.PI/2;
+      var val=metrics[idx].value*animP;
+      var px=cx+R*val*Math.cos(angle),py=cy+R*val*Math.sin(angle);
+      if(i===0)ctx2.moveTo(px,py);else ctx2.lineTo(px,py);
+    }
+    ctx2.closePath();
+    ctx2.fillStyle='rgba(88,166,255,.12)';ctx2.fill();
+    ctx2.strokeStyle='#58a6ff';ctx2.lineWidth=2;ctx2.stroke();
+    // Dots + labels
+    for(var i=0;i<n;i++){
+      var angle=(Math.PI*2/n)*i-Math.PI/2;
+      var val=metrics[i].value*animP;
+      var px=cx+R*val*Math.cos(angle),py=cy+R*val*Math.sin(angle);
+      ctx2.beginPath();ctx2.arc(px,py,4,0,Math.PI*2);
+      ctx2.fillStyle='#58a6ff';ctx2.fill();
+      ctx2.strokeStyle='#0d1117';ctx2.lineWidth=2;ctx2.stroke();
+      // Label
+      var lx=cx+(R+18)*Math.cos(angle),ly=cy+(R+18)*Math.sin(angle);
+      ctx2.fillStyle='#8b949e';ctx2.font='11px Inter,system-ui';ctx2.textAlign='center';ctx2.textBaseline='middle';
+      ctx2.fillText(metrics[i].label,lx,ly);
+    }
+    if(animP<1){animP+=.025;requestAnimationFrame(draw)}
+  }
+  draw();
+}
+
+// ===== Commit Chart =====
+function drawCommitChart(weeks){
+  var canvas=commitCanvas,ctx2=canvas.getContext('2d');
+  var dpr=window.devicePixelRatio||1;
+  canvas.width=canvas.offsetWidth*dpr;canvas.height=240*dpr;
+  ctx2.scale(dpr,dpr);
+  var W=canvas.offsetWidth,H=240;
+  var pad={t:20,r:20,b:40,l:50};
+  var cw=W-pad.l-pad.r,ch=H-pad.t-pad.b;
+
+  if(!weeks||!weeks.length)return;
+  var maxC=Math.max.apply(null,weeks.map(function(w){return w.commits}));if(maxC===0)maxC=1;
+  var step=cw/(weeks.length-1||1);
+  var animP=0;
+
+  function draw(){
+    ctx2.clearRect(0,0,W,H);
+    // Grid
+    for(var i=0;i<=4;i++){
+      var y=pad.t+ch*(1-i/4);
+      ctx2.beginPath();ctx2.moveTo(pad.l,y);ctx2.lineTo(W-pad.r,y);
+      ctx2.strokeStyle='rgba(255,255,255,.04)';ctx2.lineWidth=1;ctx2.stroke();
+      ctx2.fillStyle='#484f58';ctx2.font='10px Inter,system-ui';ctx2.textAlign='right';
+      ctx2.fillText(Math.round(maxC*i/4),pad.l-8,y+3);
+    }
+    // Area
+    ctx2.beginPath();
+    ctx2.moveTo(pad.l,pad.t+ch);
+    var visibleCount=Math.floor(weeks.length*animP);
+    for(var i=0;i<visibleCount;i++){
+      var x=pad.l+i*step;
+      var y=pad.t+ch-(weeks[i].commits/maxC)*ch;
+      if(i===0)ctx2.lineTo(x,y);else{
+        var prevX=pad.l+(i-1)*step;
+        var prevY=pad.t+ch-(weeks[i-1].commits/maxC)*ch;
+        var cpx1=prevX+step*.4,cpx2=x-step*.4;
+        ctx2.bezierCurveTo(cpx1,prevY,cpx2,y,x,y);
+      }
+    }
+    var lastX=pad.l+visibleCount*step-step;
+    ctx2.lineTo(lastX,pad.t+ch);ctx2.closePath();
+    var grad=ctx2.createLinearGradient(0,pad.t,0,pad.t+ch);
+    grad.addColorStop(0,'rgba(88,166,255,.25)');grad.addColorStop(1,'rgba(88,166,255,0)');
+    ctx2.fillStyle=grad;ctx2.fill();
+    // Line
+    ctx2.beginPath();
+    for(var i=0;i<visibleCount;i++){
+      var x=pad.l+i*step;
+      var y=pad.t+ch-(weeks[i].commits/maxC)*ch;
+      if(i===0)ctx2.moveTo(x,y);else{
+        var prevX=pad.l+(i-1)*step;
+        var prevY=pad.t+ch-(weeks[i-1].commits/maxC)*ch;
+        ctx2.bezierCurveTo(prevX+step*.4,prevY,x-step*.4,y,x,y);
+      }
+    }
+    ctx2.strokeStyle='#58a6ff';ctx2.lineWidth=2;ctx2.stroke();
+    // Dots
+    for(var i=0;i<visibleCount;i++){
+      var x=pad.l+i*step;
+      var y=pad.t+ch-(weeks[i].commits/maxC)*ch;
+      ctx2.beginPath();ctx2.arc(x,y,3,0,Math.PI*2);
+      ctx2.fillStyle='#58a6ff';ctx2.fill();
+    }
+    // X labels
+    var labelStep=Math.max(1,Math.floor(weeks.length/8));
+    for(var i=0;i<weeks.length;i+=labelStep){
+      var x=pad.l+i*step;
+      ctx2.fillStyle='#484f58';ctx2.font='9px Inter,system-ui';ctx2.textAlign='center';
+      ctx2.fillText(weeks[i].week.substring(5),x,H-pad.b+16);
+    }
+    if(animP<1){animP+=.03;requestAnimationFrame(draw)}
+  }
+  draw();
+}
+
+// ===== Contributors =====
+function renderContributors(authors){
+  if(!authors||!authors.length){contribBody.innerHTML='<tr><td colspan="6" style="text-align:center;color:#484f58;padding:20px">No contributors found</td></tr>';return}
+  var sorted=authors.slice().sort(function(a,b){return b.commits-a.commits});
+  var maxCommits=sorted[0]?sorted[0].commits:1;
+  contribBody.innerHTML='';
+  sorted.forEach(function(a,i){
+    var pct=Math.round(a.commits/maxCommits*100);
+    var row=document.createElement('tr');
+    row.className='contrib-row';
+    row.style.animationDelay=(i*80)+'ms';
+    row.innerHTML='<td>'+(a.avatar_url?'<img class="avatar" src="'+esc(a.avatar_url)+'" alt="" loading="lazy">':'<span class="avatar" style="background:#30363d;display:inline-block"></span>')+'</td><td><a class="login" href="https://github.com/'+esc(a.login)+'" target="_blank">'+esc(a.login)+'</a></td><td>'+a.commits+'</td><td style="color:#3fb950">+'+formatNum(a.additions)+'</td><td style="color:#f85149">-'+formatNum(a.deletions)+'</td><td><span class="pct-bar" style="width:0;background:linear-gradient(90deg,#1f6feb,#58a6ff)" data-w="'+pct+'%"></span> '+pct+'%</td>';
+    contribBody.appendChild(row);
+    setTimeout(function(){row.querySelector('.pct-bar').style.width=pct+'%'},400+i*80);
+  });
+  // Bus factor
+  if(busFactorBadge){
+    var bf=currentData?currentData.stats.bus_factor:0;
+    busFactorBadge.textContent='Bus Factor: '+bf;
+    busFactorBadge.className='bus-badge '+(bf>=3?'good':bf>=2?'warn':'bad');
+  }
+}
+
+// ===== Releases =====
+function renderReleases(releases){
+  if(!releases||!releases.length){releaseList.innerHTML='<div style="text-align:center;color:#484f58;padding:20px">No releases</div>';return}
+  releaseList.innerHTML='';
+  releases.forEach(function(r,i){
+    var item=document.createElement('div');item.className='rel-item';
+    item.style.animationDelay=(i*60)+'ms';
+    var d=r.published_at?new Date(r.published_at).toLocaleDateString():'';
+    item.innerHTML='<a class="rel-name" href="'+esc(r.url)+'" target="_blank">'+esc(r.name||r.tag_name)+'</a><div class="rel-right"><span class="rel-tag">'+esc(r.tag_name)+'</span><span class="rel-date">'+d+'</span></div>';
+    releaseList.appendChild(item);
+  });
+}
+
+// ===== Badges =====
+function renderEmbed(data){
+  if(!data)return;
+  var types=[
+    {type:'overview',label:'Overview',desc:'Stars, forks, issues combined'},
+    {type:'stars',label:'Stars',desc:'Stargazer count'},
+    {type:'forks',label:'Forks',desc:'Fork count'},
+    {type:'issues',label:'Issues',desc:'Open issues count'},
+    {type:'language',label:'Language',desc:'Primary language'},
+    {type:'commits',label:'Commits',desc:'Total commit count'},
+    {type:'contributors',label:'Contributors',desc:'Unique contributors'},
+    {type:'bus-factor',label:'Bus Factor',desc:'Code ownership risk'},
+    {type:'activity',label:'Activity',desc:'Weekly commit trend'},
+    {type:'health',label:'Health',desc:'Overall health score'}
+  ];
+  var grid=$('badgeGrid');grid.innerHTML='';
+  types.forEach(function(t,i){
+    var item=document.createElement('div');item.className='badge-item';
+    item.style.animationDelay=(i*50)+'ms';
+    var badgeUrl='/api/badge/gif?type='+t.type+'&url='+encodeURIComponent(data.url);
+    item.innerHTML='<div class="badge-item-header"><span class="badge-item-label">'+t.label+'</span><span class="badge-item-desc">'+t.desc+'</span></div><div class="badge-item-preview"><img src="'+badgeUrl+'" alt="'+t.label+' badge" loading="lazy"></div><div class="badge-item-actions"><button class="btn-badge-copy" title="Copy embed" data-url="'+badgeUrl+'" data-name="'+t.type+'"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button><a class="btn-badge-dl" title="Download SVG" href="/api/badge?type='+t.type+'&url='+encodeURIComponent(data.url)+'" download><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></a><button class="btn-badge-upload" title="Upload to imgbb" data-url="'+badgeUrl+'" data-name="'+t.type+'"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></button></div>';
+    grid.appendChild(item);
+  });
+  // Copy buttons
+  grid.querySelectorAll('.btn-badge-copy').forEach(function(btn){
+    btn.addEventListener('click',function(e){
+      e.stopPropagation();
+      var md='![badge]('+btn.dataset.url+')';
+      navigator.clipboard.writeText(md).then(function(){
+        btn.classList.add('copied');btn.innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3fb950" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>';
+        setTimeout(function(){btn.classList.remove('copied');btn.innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>'},2000);
       });
-    } catch (e) { /* silent */ }
+    });
+  });
+  // Individual upload
+  grid.querySelectorAll('.btn-badge-upload').forEach(function(btn){
+    btn.addEventListener('click',async function(e){
+      e.stopPropagation();
+      btn.disabled=true;btn.innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="spin"><circle cx="12" cy="12" r="10"/></svg>';
+      try{
+        var resp=await fetch('/api/badge/upload?url='+encodeURIComponent(btn.dataset.url)+'&name='+btn.dataset.name);
+        var result=await resp.json();
+        if(result.url){navigator.clipboard.writeText(result.url);btn.innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3fb950" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>';btn.style.background='rgba(46,160,67,.12)'}
+        else{btn.innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f85149" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>'}
+      }catch(ex){btn.innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f85149" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>'}
+      setTimeout(function(){btn.disabled=false},2000);
+    });
+  });
+  // Set embed code
+  if(data.url){
+    embedCode.textContent='![GitViz]('+window.location.origin+'/api/badge/gif?type=overview&url='+encodeURIComponent(data.url)+')';
   }
+}
 
-  // ---- Charts ----
-  function drawLangChart(data) {
-    var ctx = langCanvas.getContext('2d');
-    var w = langCanvas.width, h = langCanvas.height;
-    ctx.clearRect(0, 0, w, h);
+// ===== Upload All with Progress =====
+var uploadAllBtn=$('uploadAllBtn');
+if(uploadAllBtn){
+  uploadAllBtn.addEventListener('click',async function(){
+    if(!currentData)return;
+    var panel=$('uploadProgress');panel.style.display='block';
+    var fill=$('uploadProgressFill'),pct=$('uploadPercent'),body=$('uploadLogBody');
+    body.innerHTML='';fill.style.width='0%';
+    var types=['overview','stars','forks','issues','language','commits','contributors','bus-factor','activity','health'];
+    var total=types.length+1;
+    var done=0;
 
-    if (!data || data.length === 0) {
-      ctx.fillStyle = '#8b949e'; ctx.textAlign = 'center'; ctx.font = '14px "Comic Sans MS",cursive';
-      ctx.fillText('No language data', w / 2, h / 2);
-      return;
-    }
-
-    var cx = 130, cy = h / 2, r = 95, inner = 55;
-    var total = data.reduce(function (s, d) { return s + d.pct }, 0);
-    var startAngle = -Math.PI / 2;
-    var hoverIdx = -1;
-
-    function drawPie(highlight) {
-      ctx.clearRect(0, 0, w, h);
-      var angle = -Math.PI / 2;
-      data.forEach(function (lang, i) {
-        var slice = (lang.pct / total) * Math.PI * 2;
-        var endAngle = angle + slice;
-        var expanded = (i === highlight) ? 6 : 0;
-        var midAngle = angle + slice / 2;
-        var ex = Math.cos(midAngle) * expanded;
-        var ey = Math.sin(midAngle) * expanded;
-
-        ctx.beginPath();
-        ctx.moveTo(cx + ex, cy + ey);
-        ctx.arc(cx + ex, cy + ey, r, angle, endAngle);
-        ctx.closePath();
-        ctx.fillStyle = lang.color || '#58a6ff';
-        ctx.fill();
-
-        if (i === highlight) {
-          ctx.strokeStyle = 'rgba(255,255,255,.4)';
-          ctx.lineWidth = 2;
-          ctx.stroke();
+    addUploadLog('upload','Starting batch upload to imgbb...');
+    try{
+      var resp=await fetch('/api/badge/upload-all?url='+encodeURIComponent(currentData.url));
+      var reader=resp.body.getReader();
+      var decoder=new TextDecoder();
+      var buffer='';
+      while(true){
+        var chunk=await reader.read();
+        if(chunk.done)break;
+        buffer+=decoder.decode(chunk,{stream:true});
+        var lines=buffer.split('\n');
+        buffer=lines.pop();
+        for(var i=0;i<lines.length;i++){
+          var line=lines[i].trim();
+          if(!line||!line.startsWith('data:'))continue;
+          try{
+            var ev=JSON.parse(line.substring(5));
+            if(ev.stage&&ev.message){
+              addUploadLog(ev.stage,ev.message);
+              done++;
+              fill.style.width=Math.round(done/total*100)+'%';
+              pct.textContent=done+' / '+total;
+            }
+          }catch(ex){}
         }
-
-        if (slice > 0.12) {
-          var lr = r - (r - inner) / 2 + ex * 0.3;
-          var lx = cx + Math.cos(midAngle) * lr;
-          var ly = cy + Math.sin(midAngle) * lr;
-          ctx.fillStyle = '#fff';
-          ctx.font = 'bold 11px "Comic Sans MS",cursive';
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
-          if (lang.pct >= 6) ctx.fillText(Math.round(lang.pct) + '%', lx, ly);
-        }
-
-        angle = endAngle;
-      });
-
-      ctx.beginPath();
-      ctx.arc(cx, cy, inner, 0, Math.PI * 2);
-      ctx.fillStyle = '#0d1117';
-      ctx.fill();
-
-      ctx.fillStyle = '#e6edf3';
-      ctx.font = 'bold 18px "Comic Sans MS",cursive';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(data.length, cx, cy - 6);
-      ctx.fillStyle = '#8b949e';
-      ctx.font = '10px "Comic Sans MS",cursive';
-      ctx.fillText('languages', cx, cy + 10);
-
-      var ly = 12;
-      var lx = 280;
-      data.forEach(function (lang, i) {
-        if (ly > h - 10) return;
-        ctx.fillStyle = lang.color || '#58a6ff';
-        ctx.beginPath();
-        ctx.arc(lx, ly + 5, 5, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.fillStyle = (i === highlight) ? '#fff' : '#c9d1d9';
-        ctx.font = '12px "Comic Sans MS",cursive';
-        ctx.textAlign = 'left';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(lang.name, lx + 12, ly + 5);
-        ctx.fillStyle = '#8b949e';
-        ctx.font = '11px "Comic Sans MS",cursive';
-        ctx.fillText(lang.pct.toFixed(1) + '%', lx + 12 + ctx.measureText(lang.name).width + 6, ly + 5);
-        ly += 20;
-      });
-    }
-
-    drawPie(-1);
-
-    langCanvas.addEventListener('mousemove', function (e) {
-      var rect = langCanvas.getBoundingClientRect();
-      var sx = (e.clientX - rect.left) * (w / rect.width);
-      var sy = (e.clientY - rect.top) * (h / rect.height);
-      var dx = sx - cx, dy = sy - cy;
-      var dist = Math.sqrt(dx * dx + dy * dy);
-      if (dist < inner || dist > r) { if (hoverIdx !== -1) { hoverIdx = -1; drawPie(-1); } return; }
-      var mouseAngle = Math.atan2(dy, dx);
-      if (mouseAngle < -Math.PI / 2) mouseAngle += Math.PI * 2;
-      var angle = -Math.PI / 2;
-      var found = -1;
-      for (var i = 0; i < data.length; i++) {
-        var slice = (data[i].pct / total) * Math.PI * 2;
-        if (mouseAngle >= angle && mouseAngle < angle + slice) { found = i; break; }
-        angle += slice;
       }
-      if (found !== hoverIdx) { hoverIdx = found; drawPie(found); }
-    });
-
-    langCanvas.addEventListener('mouseleave', function () { hoverIdx = -1; drawPie(-1); });
-  }
-
-  function drawStarGraph(data, stats) {
-    var ctx = starCanvas.getContext('2d');
-    var w = starCanvas.width, h = starCanvas.height;
-    ctx.clearRect(0, 0, w, h);
-
-    var metrics = [
-      { label: 'Stars', value: data.stars || 0, max: Math.max(100, data.stars || 0) * 1.2, color: '#f0c040' },
-      { label: 'Forks', value: data.forks || 0, max: Math.max(50, data.forks || 0) * 1.2, color: '#1f6feb' },
-      { label: 'Issues', value: Math.max(0, 50 - (data.open_issues || 0)), max: 50, color: '#3fb950' },
-      { label: 'Contributors', value: (stats && stats.authors) ? stats.authors.length : 0, max: Math.max(10, ((stats && stats.authors) ? stats.authors.length : 0) * 1.5), color: '#a371f7' },
-      { label: 'Commits', value: stats ? stats.total_commits || 0 : 0, max: Math.max(100, (stats ? stats.total_commits || 0 : 0) * 1.2), color: '#58a6ff' },
-      { label: 'Activity', value: (stats && stats.weekly_commits) ? stats.weekly_commits.slice(-4).reduce(function (s, w) { return s + w.commits }, 0) : 0, max: Math.max(20, (stats && stats.weekly_commits) ? stats.weekly_commits.slice(-4).reduce(function (s, w) { return s + w.commits }, 0) * 1.5 : 20), color: '#f85149' },
-      { label: 'Bus Factor', value: stats ? stats.bus_factor || 0 : 0, max: Math.max(5, (stats ? stats.bus_factor || 0 : 0) * 1.5), color: '#d29922' },
-      { label: 'Releases', value: data.releases ? data.releases.length : 0, max: Math.max(5, (data.releases ? data.releases.length : 0) * 1.5), color: '#79c0ff' }
-    ];
-
-    var cx = w / 2, cy = h / 2 + 5;
-    var maxR = Math.min(w, h) / 2 - 45;
-    var n = metrics.length;
-    var angleStep = (Math.PI * 2) / n;
-
-    [0.25, 0.5, 0.75, 1.0].forEach(function (pct) {
-      ctx.beginPath();
-      for (var i = 0; i <= n; i++) {
-        var a = -Math.PI / 2 + i * angleStep;
-        var px = cx + Math.cos(a) * maxR * pct;
-        var py = cy + Math.sin(a) * maxR * pct;
-        i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
-      }
-      ctx.closePath();
-      ctx.strokeStyle = 'rgba(255,255,255,.06)';
-      ctx.lineWidth = 1;
-      ctx.stroke();
-    });
-
-    for (var i = 0; i < n; i++) {
-      var a = -Math.PI / 2 + i * angleStep;
-      ctx.beginPath();
-      ctx.moveTo(cx, cy);
-      ctx.lineTo(cx + Math.cos(a) * maxR, cy + Math.sin(a) * maxR);
-      ctx.strokeStyle = 'rgba(255,255,255,.08)';
-      ctx.stroke();
-    }
-
-    ctx.beginPath();
-    metrics.forEach(function (m, i) {
-      var a = -Math.PI / 2 + i * angleStep;
-      var pct = Math.min(1, m.value / m.max);
-      var px = cx + Math.cos(a) * maxR * pct;
-      var py = cy + Math.sin(a) * maxR * pct;
-      i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
-    });
-    ctx.closePath();
-    ctx.fillStyle = 'rgba(31,111,235,.15)';
-    ctx.fill();
-    ctx.strokeStyle = '#1f6feb';
-    ctx.lineWidth = 2;
-    ctx.stroke();
-
-    metrics.forEach(function (m, i) {
-      var a = -Math.PI / 2 + i * angleStep;
-      var pct = Math.min(1, m.value / m.max);
-      var px = cx + Math.cos(a) * maxR * pct;
-      var py = cy + Math.sin(a) * maxR * pct;
-
-      ctx.beginPath();
-      ctx.arc(px, py, 4, 0, Math.PI * 2);
-      ctx.fillStyle = m.color;
-      ctx.fill();
-      ctx.strokeStyle = '#fff';
-      ctx.lineWidth = 1.5;
-      ctx.stroke();
-
-      var lx = cx + Math.cos(a) * (maxR + 22);
-      var ly = cy + Math.sin(a) * (maxR + 22);
-      ctx.fillStyle = m.color;
-      ctx.font = '11px "Comic Sans MS",cursive';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(m.label, lx, ly - 7);
-      ctx.fillStyle = '#8b949e';
-      ctx.font = '10px "Comic Sans MS",cursive';
-      ctx.fillText(typeof m.value === 'number' && m.value > 999 ? (m.value / 1000).toFixed(1) + 'k' : m.value, lx, ly + 7);
-    });
-  }
-
-  function drawCommitChart(data) {
-    var ctx = commitCanvas.getContext('2d');
-    var w = commitCanvas.width, h = commitCanvas.height;
-    ctx.clearRect(0, 0, w, h);
-
-    if (!data || data.length < 2) {
-      ctx.fillStyle = '#8b949e'; ctx.textAlign = 'center'; ctx.font = '14px "Comic Sans MS",cursive';
-      ctx.fillText('Not enough commit data', w / 2, h / 2);
-      return;
-    }
-
-    var pad = { top: 12, bottom: 28, left: 40, right: 16 };
-    var bw = w - pad.left - pad.right;
-    var bh = h - pad.top - pad.bottom;
-    var maxVal = Math.max(1, data.reduce(function (m, d) { return Math.max(m, d.commits) }, 0)) * 1.15;
-
-    ctx.strokeStyle = 'rgba(255,255,255,.04)';
-    ctx.lineWidth = 1;
-    for (var i = 0; i <= 4; i++) {
-      var gy = pad.top + (bh * (1 - i / 4));
-      ctx.beginPath(); ctx.moveTo(pad.left, gy); ctx.lineTo(w - pad.right, gy); ctx.stroke();
-      ctx.fillStyle = '#484f58'; ctx.font = '9px "Comic Sans MS",cursive'; ctx.textAlign = 'right';
-      ctx.fillText(Math.round(maxVal * i / 4) + '', pad.left - 6, gy + 3);
-    }
-
-    ctx.beginPath();
-    data.forEach(function (d, i) {
-      var x = pad.left + (i / (data.length - 1)) * bw;
-      var barH = (d.commits / maxVal) * bh;
-      var y = pad.top + bh - barH;
-      i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
-    });
-    ctx.lineTo(pad.left + bw, pad.top + bh);
-    ctx.lineTo(pad.left, pad.top + bh);
-    ctx.closePath();
-    var grad = ctx.createLinearGradient(0, pad.top, 0, pad.top + bh);
-    grad.addColorStop(0, 'rgba(31,111,235,.25)');
-    grad.addColorStop(1, 'rgba(31,111,235,0)');
-    ctx.fillStyle = grad;
-    ctx.fill();
-
-    ctx.beginPath();
-    data.forEach(function (d, i) {
-      var x = pad.left + (i / (data.length - 1)) * bw;
-      var barH = (d.commits / maxVal) * bh;
-      var y = pad.top + bh - barH;
-      i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
-    });
-    ctx.strokeStyle = '#1f6feb';
-    ctx.lineWidth = 2;
-    ctx.stroke();
-
-    var dots = [];
-    data.forEach(function (d, i) {
-      var x = pad.left + (i / (data.length - 1)) * bw;
-      var barH = (d.commits / maxVal) * bh;
-      var y = pad.top + bh - barH;
-      dots.push({ x: x, y: y, d: d });
-      ctx.beginPath(); ctx.arc(x, y, 2.5, 0, Math.PI * 2);
-      ctx.fillStyle = '#1f6feb';
-      ctx.fill();
-    });
-
-    var skip = Math.max(1, Math.floor(data.length / 10));
-    data.forEach(function (d, i) {
-      if (i % skip === 0 || i === data.length - 1) {
-        var x = pad.left + (i / (data.length - 1)) * bw;
-        ctx.fillStyle = '#484f58'; ctx.font = '8px "Comic Sans MS",cursive'; ctx.textAlign = 'center';
-        ctx.fillText(d.week.slice(5), x, h - 6);
-      }
-    });
-
-    commitCanvas.onmousemove = function (e) {
-      var rect = commitCanvas.getBoundingClientRect();
-      var mx = (e.clientX - rect.left) * (w / rect.width);
-      var my = (e.clientY - rect.top) * (h / rect.height);
-      var closest = null, closestD = Infinity;
-      dots.forEach(function (dot) {
-        var dx = mx - dot.x, dy = my - dot.y;
-        var d = Math.sqrt(dx * dx + dy * dy);
-        if (d < closestD && d < 20) { closestD = d; closest = dot; }
-      });
-      if (closest) {
-        showTooltip(e, closest.d.week + ': ' + closest.d.commits + ' commits');
-        ctx.clearRect(0, 0, w, h);
-        drawCommitChart(data);
-        ctx.beginPath(); ctx.arc(closest.x, closest.y, 5, 0, Math.PI * 2);
-        ctx.fillStyle = '#58a6ff'; ctx.fill();
-        ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5; ctx.stroke();
-      } else {
-        hideTooltip();
-      }
-    };
-    commitCanvas.onmouseleave = function () { hideTooltip(); drawCommitChart(data); };
-  }
-
-  // ---- Render ----
-  function renderStats(data) {
-    var items = [
-      { icon: '⭐', label: 'Stars', value: data.stars, tip: data.stars + ' stargazers' },
-      { icon: '🍴', label: 'Forks', value: data.forks, tip: data.forks + ' forks' },
-      { icon: '⚠', label: 'Open Issues', value: data.open_issues, tip: data.open_issues + ' open issues' },
-      { icon: '🔀', label: 'Open PRs', value: data.open_prs, tip: data.open_prs + ' open PRs' },
-      { icon: '📄', label: 'License', value: data.license || 'N/A', text: true, tip: 'License: ' + (data.license || 'N/A') },
-      { icon: '🔤', label: 'Language', value: data.primary_lang || 'N/A', text: true, tip: 'Primary: ' + (data.primary_lang || 'N/A') },
-      { icon: '📝', label: 'Commits', value: data.stats.total_commits, tip: data.stats.total_commits + ' total commits (sampled)' },
-      { icon: '➕', label: 'Lines Added', value: data.stats.total_additions, tip: '+' + data.stats.total_additions.toLocaleString() + ' lines added' },
-      { icon: '➖', label: 'Lines Deleted', value: data.stats.total_deletions, tip: '-' + data.stats.total_deletions.toLocaleString() + ' lines deleted' },
-      { icon: '👥', label: 'Contributors', value: data.stats.authors ? data.stats.authors.length : 0, tip: (data.stats.authors ? data.stats.authors.length : 0) + ' contributors' },
-    ];
-
-    statsGrid.innerHTML = items.map(function (item, i) {
-      var val = item.text ? esc(item.value) : '<span class="stat-number" data-count="' + item.value + '">0</span>';
-      return '<div class="stat-card slide-up" style="animation-delay:' + (i * 0.06) + 's" data-tip="' + esc(item.tip || '') + '">' +
-        '<span class="stat-icon">' + item.icon + '</span>' + val +
-        '<span class="stat-label">' + item.label + '</span></div>';
-    }).join('');
-
-    setTimeout(function () {
-      statsGrid.querySelectorAll('.stat-number[data-count]').forEach(function (el) {
-        animateCount(el, parseInt(el.dataset.count));
-      });
-    }, 200);
-
-    statsGrid.querySelectorAll('.stat-card').forEach(function (card) {
-      card.addEventListener('mouseenter', function (e) { showTooltip(e, card.dataset.tip) });
-      card.addEventListener('mouseleave', hideTooltip);
-      card.addEventListener('mousemove', function (e) {
-        tooltip.style.left = (e.clientX + 12) + 'px';
-        tooltip.style.top = (e.clientY - 10) + 'px';
-      });
-    });
-
-    var bf = data.stats.bus_factor || 0;
-    busFactorBadge.textContent = 'Bus Factor: ' + bf;
-    busFactorBadge.className = 'bus-badge ' + (bf <= 1 ? 'bad' : bf <= 3 ? 'warn' : 'good');
-  }
-
-  function renderContributors(authors) {
-    if (!authors || authors.length === 0) {
-      contribBody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#8b949e;padding:20px">No contributor data</td></tr>';
-      return;
-    }
-    var maxCommits = Math.max(1, authors[0].commits);
-    contribBody.innerHTML = authors.map(function (a, i) {
-      var pct = (a.commits / maxCommits) * 100;
-      return '<tr class="contrib-row" style="animation-delay:' + (i * 0.04) + 's" data-tip="' + esc(a.login) + ': ' + a.commits + ' commits">' +
-        '<td>' + (a.avatar_url ? '<img src="' + esc(a.avatar_url) + '" class="avatar" alt="">' : '<span class="avatar" style="display:inline-block;background:#30363d"></span>') + '</td>' +
-        '<td><a class="login" href="https://github.com/' + esc(a.login) + '" target="_blank">' + esc(a.login) + '</a></td>' +
-        '<td>' + a.commits + ' <span class="pct-bar" style="width:' + pct + 'px;max-width:80px"></span></td>' +
-        '<td style="color:#2ea043">+' + a.additions + '</td>' +
-        '<td style="color:#f85149">-' + a.deletions + '</td>' +
-        '<td>' + a.pct.toFixed(1) + '%</td></tr>';
-    }).join('');
-
-    contribBody.querySelectorAll('tr').forEach(function (row) {
-      row.addEventListener('mouseenter', function (e) { showTooltip(e, row.dataset.tip) });
-      row.addEventListener('mouseleave', hideTooltip);
-      row.addEventListener('mousemove', function (e) {
-        tooltip.style.left = (e.clientX + 12) + 'px';
-        tooltip.style.top = (e.clientY - 10) + 'px';
-      });
-    });
-  }
-
-  function renderReleases(releases) {
-    if (!releases || releases.length === 0) {
-      releaseList.innerHTML = '<div style="color:#8b949e;padding:16px;text-align:center;font-size:13px">No releases yet</div>';
-      return;
-    }
-    releaseList.innerHTML = releases.map(function (r, i) {
-      return '<div class="rel-item" style="animation-delay:' + (i * 0.05) + 's">' +
-        '<a class="rel-name" href="' + esc(r.url) + '" target="_blank">' + esc(r.name || r.tag_name) + '</a>' +
-        '<div class="rel-right"><span class="rel-tag">' + esc(r.tag_name) + '</span><span class="rel-date">' + (r.published_at ? r.published_at.slice(0, 10) : '') + '</span></div></div>';
-    }).join('');
-  }
-
-  function renderEmbed(data) {
-    var base = window.location.origin;
-    var url = 'https://github.com/' + data.owner + '/' + data.repo;
-
-    var badgeTypes = [
-      { type: 'overview', label: 'Overview', desc: 'Repo name + language + star rating' },
-      { type: 'stars', label: 'Stars', desc: 'Star count with rating' },
-      { type: 'forks', label: 'Forks', desc: 'Fork count' },
-      { type: 'issues', label: 'Issues', desc: 'Open issues count' },
-      { type: 'language', label: 'Language', desc: 'Primary language' },
-      { type: 'commits', label: 'Commits', desc: 'Total commit count' },
-      { type: 'contributors', label: 'Contributors', desc: 'Number of contributors' },
-      { type: 'bus-factor', label: 'Bus Factor', desc: 'Bus factor with rating' },
-      { type: 'activity', label: 'Activity', desc: 'Recent commit frequency' },
-      { type: 'health', label: 'Health Score', desc: 'Overall repo health' }
-    ];
-
-    var imgbbMap = null;
-
-    embedCode.textContent = 'Loading...';
-    badgePreview.innerHTML = '<div style="text-align:center;padding:40px"><div class="upload-spinner" style="margin:0 auto 16px"></div>Uploading GIF badges to imgbb cloud...</div>';
-
-    var uploadAllBtn = $('uploadAllBtn');
-    if (uploadAllBtn) uploadAllBtn.style.display = 'none';
-
-    fetch('/api/badge/upload-all?url=' + encodeURIComponent(url), { method: 'POST' })
-      .then(function (r) { return r.json() })
-      .then(function (data) {
-        if (data.error) throw new Error(data.error);
-
-        var badges = data.badges || [];
-        imgbbMap = {};
-        badges.forEach(function (b) { imgbbMap[b.type] = b.url; });
-
-        var overviewUrl = imgbbMap['overview'] || (badges.length > 0 ? badges[0].url : null);
-
-        if (overviewUrl) {
-          embedCode.textContent = '[![GitViz](' + overviewUrl + ')](' + url + ')';
-          badgePreview.innerHTML = '<img src="' + esc(overviewUrl) + '" alt="GitViz badge" style="max-width:100%;border-radius:4px">';
-        } else {
-          embedCode.textContent = 'No badge data';
-          badgePreview.innerHTML = '<div style="text-align:center;padding:20px;color:#8b949e">No badges uploaded</div>';
-        }
-
-        var grid = $('badgeGrid');
-        if (grid) {
-          grid.innerHTML = badgeTypes.map(function (bt) {
-            var imgbbUrl = imgbbMap[bt.type];
-            if (!imgbbUrl) return '';
-            var mdCode = '[![GitViz ' + bt.label + '](' + imgbbUrl + ')](' + url + ')';
-            return '<div class="badge-item" data-md="' + esc(mdCode) + '">' +
-              '<div class="badge-item-header">' +
-              '<span class="badge-item-label">' + bt.label + '</span>' +
-              '<span class="badge-item-desc">' + bt.desc + '</span>' +
-              '</div>' +
-              '<div class="badge-item-preview"><img src="' + esc(imgbbUrl) + '" alt="' + esc(bt.label) + ' badge"></div>' +
-              '<div class="badge-item-actions">' +
-              '<button class="btn-badge-copy" data-code="' + esc(mdCode) + '" title="Copy embed code">' +
-              '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>' +
-              '</button>' +
-              '</div>' +
-              '</div>';
-          }).join('');
-
-          grid.querySelectorAll('.btn-badge-copy').forEach(function (btn) {
-            btn.addEventListener('click', function (e) {
-              e.preventDefault();
-              e.stopPropagation();
-              navigator.clipboard.writeText(btn.dataset.code).then(function () {
-                btn.classList.add('copied');
-                btn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#3fb950" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>';
-                setTimeout(function () {
-                  btn.classList.remove('copied');
-                  btn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
-                }, 1500);
-              });
-            });
-          });
-
-          grid.querySelectorAll('.badge-item').forEach(function (item) {
-            item.addEventListener('click', function () {
-              navigator.clipboard.writeText(item.dataset.md).then(function () {
-                var label = item.querySelector('.badge-item-label');
-                var orig = label.textContent;
-                label.textContent = 'Copied!';
-                label.style.color = '#3fb950';
-                setTimeout(function () { label.textContent = orig; label.style.color = ''; }, 1200);
-              });
-            });
+      // Fallback: simple fetch
+      if(done===0){
+        var result=await fetch('/api/badge/upload-all?url='+encodeURIComponent(currentData.url)).then(function(r){return r.json()});
+        if(result.badges){
+          result.badges.forEach(function(b,i){
+            addUploadLog('imgbb',b.type+' → '+b.url);
+            done++;fill.style.width=Math.round(done/total*100)+'%';pct.textContent=done+' / '+total;
           });
         }
-
-        var copyAllBtn = $('copyAllBtn');
-        if (copyAllBtn) {
-          copyAllBtn.onclick = function () {
-            var allCodes = badgeTypes.map(function (bt) {
-              var imgbbUrl = imgbbMap[bt.type];
-              return imgbbUrl ? '[![GitViz ' + bt.label + '](' + imgbbUrl + ')](' + url + ')' : '';
-            }).filter(Boolean).join('\n');
-            navigator.clipboard.writeText(allCodes).then(function () {
-              copyAllBtn.textContent = 'Copied!';
-              setTimeout(function () { copyAllBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copy All Embed Codes'; }, 2000);
-            });
-          };
-        }
-
-        var dlAllBtn = $('downloadAllBtn');
-        if (dlAllBtn) {
-          dlAllBtn.onclick = function () {
-            badgeTypes.forEach(function (bt) {
-              var imgbbUrl = imgbbMap[bt.type];
-              if (imgbbUrl) window.open(imgbbUrl, '_blank');
-            });
-          };
-        }
-      })
-      .catch(function (e) {
-        badgePreview.innerHTML = '<div style="text-align:center;padding:20px;color:#f85149">Failed to upload badges: ' + esc(e.message) + '</div>';
-        embedCode.textContent = 'Error loading badges';
-      });
-  }
-
-  function showDashboard(data) {
-    currentData = data;
-    landing.style.display = 'none';
-    dashboard.style.display = 'block';
-    loading.style.display = 'none';
-    clearError();
-    repoName.textContent = data.full_name;
-    repoDesc.textContent = data.description || 'No description';
-    renderStats(data);
-    drawLangChart(data.languages);
-    drawStarGraph(data, data.stats);
-    drawCommitChart(data.stats.weekly_commits);
-    renderContributors(data.stats.authors);
-    renderReleases(data.releases);
-    renderEmbed(data);
-    setupReveal();
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }
-
-  function connectSSE() {
-    var es = new EventSource('/api/progress');
-    var logBody = $('logBody');
-    var progressFill = $('progressFill');
-    var progressGlow = $('progressGlow');
-    var progressPercent = $('progressPercent');
-    var loadingTitle = $('loadingTitle');
-    var logLines = [];
-
-    es.onmessage = function (e) {
-      var event = JSON.parse(e.data);
-
-      if (progressFill) {
-        progressFill.style.width = event.percent + '%';
-        progressGlow.style.width = event.percent + '%';
       }
-      if (progressPercent) progressPercent.textContent = event.percent + '%';
-      if (loadingTitle && event.message) loadingTitle.textContent = event.message;
+      addUploadLog('done','All badges uploaded successfully!');
+      fill.style.width='100%';pct.textContent='Done!';
+    }catch(ex){
+      addUploadLog('error','Upload failed: '+ex.message);
+    }
+  });
+}
 
-      var time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-      var line = document.createElement('div');
-      line.className = 'log-line' + (event.error ? ' error' : '');
-      line.innerHTML =
-        '<span class="log-time">' + esc(time) + '</span>' +
-        '<span class="log-stage ' + esc(event.stage) + '">' + esc(event.stage) + '</span>' +
-        '<span class="log-msg">' + esc(event.message) + '</span>';
-      logLines.push(line);
-      if (logBody) {
-        logBody.appendChild(line);
-        logBody.scrollTop = logBody.scrollHeight;
-      }
+// ===== Auth =====
+async function checkAuth(){
+  try{
+    var r=await fetch('/api/user');var d=await r.json();
+    if(d.logged_in){
+      currentUser=d;
+      userArea.innerHTML='<img src="'+esc(d.avatar_url)+'" style="width:28px;height:28px;border-radius:50%;border:2px solid rgba(255,255,255,.1)"><span style="font-size:12px;color:#c9d1d9;margin-left:6px">'+esc(d.login)+'</span>';
+      tokenInfo.style.display='none';loginBtn.style.display='none';
+    }else if(d.token_mode){
+      tokenInfo.textContent='Token Mode';tokenInfo.style.display='inline';
+      loginBtn.style.display='none';userArea.innerHTML='';
+    }else{
+      loginBtn.style.display='flex';userArea.innerHTML='';
+    }
+  }catch(ex){}
+}
 
-      if (event.done || event.error) {
-        es.close();
-        setTimeout(function () {
-          if (progressFill) progressFill.style.width = '100%';
-          if (progressGlow) progressGlow.style.width = '100%';
-          if (progressPercent) progressPercent.textContent = '100%';
-        }, 200);
-      }
+// ===== Init =====
+function init(){
+  checkAuth();
+  analyzeBtn.addEventListener('click',function(){triggerAnalyze(repoInput.value.trim())});
+  repoInput.addEventListener('keydown',function(e){if(e.key==='Enter')triggerAnalyze(repoInput.value.trim())});
+  heroBtn.addEventListener('click',function(){triggerAnalyze(heroInput.value.trim())});
+  heroInput.addEventListener('keydown',function(e){if(e.key==='Enter')triggerAnalyze(heroInput.value.trim())});
+  document.querySelectorAll('.chip[data-repo]').forEach(function(el){
+    el.addEventListener('click',function(){triggerAnalyze(el.dataset.repo)});
+  });
+  newAnalysisBtn.addEventListener('click',function(){
+    dashboard.style.display='none';landing.style.display='flex';
+    newAnalysisBtn.style.display='none';
+    window.scrollTo({top:0,behavior:'smooth'});
+  });
+  loginBtn.addEventListener('click',function(){window.location.href='/auth/github'});
+
+  // Settings
+  var settingsModal=$('settingsModal'),settingsBtn=$('settingsBtn'),closeSettingsBtn=$('closeSettingsBtn'),saveSettingsBtn=$('saveSettingsBtn'),settingsStatus=$('settingsStatus');
+  settingsBtn.addEventListener('click',function(){settingsModal.style.display='flex';loadSettingsForm()});
+  closeSettingsBtn.addEventListener('click',function(){settingsModal.style.display='none'});
+  settingsModal.addEventListener('click',function(e){if(e.target===settingsModal)settingsModal.style.display='none'});
+  saveSettingsBtn.addEventListener('click',function(){
+    var payload={
+      github_token:$('settingsToken').value.trim(),
+      github_client_id:$('settingsClientID').value.trim(),
+      github_client_secret:$('settingsClientSecret').value.trim(),
+      imgbb_api_key:$('settingsImgBB').value.trim(),
+      port:$('settingsPort').value.trim()
     };
-
-    es.onerror = function () { es.close() };
-    return { es: es, logLines: logLines };
-  }
-
-  async function analyze(url) {
-    loading.style.display = 'block';
-    clearError();
-    dashboard.style.display = 'block';
-    landing.style.display = 'none';
-
-    var progressFill = $('progressFill');
-    var progressGlow = $('progressGlow');
-    var progressPercent = $('progressPercent');
-    var logBody = $('logBody');
-    var loadingTitle = $('loadingTitle');
-
-    if (progressFill) progressFill.style.width = '0%';
-    if (progressGlow) progressGlow.style.width = '0%';
-    if (progressPercent) progressPercent.textContent = '0%';
-    if (logBody) logBody.innerHTML = '';
-    if (loadingTitle) loadingTitle.textContent = 'Analyzing repository...';
-
-    var sse = connectSSE();
-
-    try {
-      var data = await api('/api/repo?url=' + encodeURIComponent(url));
-      showDashboard(data);
-    } catch (e) {
-      loading.style.display = 'none';
-      showError(e.message);
-    }
-  }
-
-  function triggerAnalyze(url) {
-    if (!url) return;
-    if (!url.match(/github\.com\//)) {
-      if (url.match(/^[\w.-]+\/[\w.-]+$/)) {
-        url = 'https://github.com/' + url;
-      } else {
-        showError('Enter a GitHub URL (github.com/user/repo) or "user/repo" format');
-        return;
-      }
-    }
-    analyze(url);
-  }
-
-  function init() {
-    checkAuth();
-
-    analyzeBtn.addEventListener('click', function () { triggerAnalyze(repoInput.value.trim()) });
-    repoInput.addEventListener('keydown', function (e) { if (e.key === 'Enter') triggerAnalyze(repoInput.value.trim()) });
-    heroBtn.addEventListener('click', function () { triggerAnalyze(heroInput.value.trim()) });
-    heroInput.addEventListener('keydown', function (e) { if (e.key === 'Enter') triggerAnalyze(heroInput.value.trim()) });
-
-    document.querySelectorAll('.chip[data-repo]').forEach(function (el) {
-      el.addEventListener('click', function () { triggerAnalyze(el.dataset.repo) });
+    saveSettingsBtn.disabled=true;saveSettingsBtn.textContent='Saving...';
+    fetch('/api/settings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
+    .then(function(r){return r.json()}).then(function(d){
+      saveSettingsBtn.disabled=false;saveSettingsBtn.textContent='Save Settings';
+      settingsStatus.textContent=d.status==='saved'?'Saved!':'Error';
+      settingsStatus.className='settings-status '+(d.status==='saved'?'success':'error');
+      setTimeout(function(){settingsStatus.textContent=''},3000);
+    }).catch(function(){
+      saveSettingsBtn.disabled=false;saveSettingsBtn.textContent='Save Settings';
+      settingsStatus.textContent='Failed';settingsStatus.className='settings-status error';
     });
+  });
 
-    newAnalysisBtn.addEventListener('click', function () {
-      dashboard.style.display = 'none';
-      landing.style.display = 'block';
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+  copyBtn.addEventListener('click',function(){
+    navigator.clipboard.writeText(embedCode.textContent).then(function(){
+      copyBtn.textContent='Copied!';setTimeout(function(){copyBtn.textContent='Copy'},2000);
     });
+  });
+}
 
-    copyBtn.addEventListener('click', function () {
-      navigator.clipboard.writeText(embedCode.textContent).then(function () {
-        copyBtn.textContent = 'Copied!';
-        setTimeout(function () { copyBtn.textContent = 'Copy' }, 2000);
-      }).catch(function () {});
-    });
+async function loadSettingsForm(){
+  try{
+    var r=await fetch('/api/settings');var s=await r.json();
+    $('settingsToken').value=s.github_token||'';
+    $('settingsClientID').value=s.github_client_id||'';
+    $('settingsClientSecret').value=s.github_client_secret||'';
+    $('settingsImgBB').value=s.imgbb_api_key||'';
+    $('settingsPort').value=s.port||'';
+  }catch(ex){}
+}
 
-    loginBtn.addEventListener('click', function () { window.location.href = '/auth/github' });
-
-    // ===== Settings Modal =====
-    var settingsModal = $('settingsModal');
-    var settingsBtn = $('settingsBtn');
-    var closeSettingsBtn = $('closeSettingsBtn');
-    var saveSettingsBtn = $('saveSettingsBtn');
-    var settingsStatus = $('settingsStatus');
-
-    settingsBtn.addEventListener('click', function () {
-      settingsModal.style.display = 'flex';
-      loadSettingsForm();
-    });
-
-    closeSettingsBtn.addEventListener('click', function () {
-      settingsModal.style.display = 'none';
-    });
-
-    settingsModal.addEventListener('click', function (e) {
-      if (e.target === settingsModal) settingsModal.style.display = 'none';
-    });
-
-    saveSettingsBtn.addEventListener('click', function () {
-      var payload = {
-        github_token: $('settingsToken').value.trim(),
-        github_client_id: $('settingsClientID').value.trim(),
-        github_client_secret: $('settingsClientSecret').value.trim(),
-        imgbb_api_key: $('settingsImgBB').value.trim(),
-        port: $('settingsPort').value.trim()
-      };
-
-      saveSettingsBtn.disabled = true;
-      saveSettingsBtn.textContent = 'Saving...';
-
-      fetch('/api/settings', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      })
-        .then(function (r) { return r.json() })
-        .then(function (d) {
-          saveSettingsBtn.disabled = false;
-          saveSettingsBtn.textContent = 'Save Settings';
-          if (d.error) {
-            settingsStatus.textContent = d.error;
-            settingsStatus.className = 'settings-status error';
-          } else {
-            settingsStatus.textContent = 'Settings saved! Restart server to apply port changes.';
-            settingsStatus.className = 'settings-status success';
-            setTimeout(function () { settingsStatus.textContent = '' }, 4000);
-          }
-        })
-        .catch(function (e) {
-          saveSettingsBtn.disabled = false;
-          saveSettingsBtn.textContent = 'Save Settings';
-          settingsStatus.textContent = 'Error: ' + e.message;
-          settingsStatus.className = 'settings-status error';
-        });
-    });
-
-    function loadSettingsForm() {
-      fetch('/api/settings')
-        .then(function (r) { return r.json() })
-        .then(function (s) {
-          $('settingsToken').value = s.github_token === '***' ? '' : (s.github_token || '');
-          $('settingsClientID').value = s.github_client_id || '';
-          $('settingsClientSecret').value = s.github_client_secret === '***' ? '' : (s.github_client_secret || '');
-          $('settingsImgBB').value = s.imgbb_api_key === '***' ? '' : (s.imgbb_api_key || '');
-          $('settingsPort').value = s.port || '8080';
-        });
-    }
-
-    analyze('https://github.com/mayank-dev-15/mayank-dev-15');
-  }
-
-  document.addEventListener('DOMContentLoaded', init);
+init();
 })();

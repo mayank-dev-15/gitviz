@@ -3,127 +3,200 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>GitViz — Repository Analytics</title>
+<title>GitViz — See Inside Any Repository</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<div class="stars"></div>
+<canvas id="bgCanvas"></canvas>
+<div id="cursor-glow"></div>
 
-<nav class="glass">
-  <div class="nav-inner">
-    <a href="/" class="logo">◈ GitViz</a>
-    <div class="nav-center">
-      <div class="search-wrap">
-        <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-        <input type="text" id="repoInput" placeholder="github.com/user/repo" spellcheck="false">
+<!-- ===== LANDING ===== -->
+<div id="landing">
+  <div class="landing-content">
+    <div class="landing-badge">
+      <span class="badge-pulse"></span>
+      <span>v1.0 &middot; Go &middot; Vanilla JS &middot; Zero Dependencies</span>
+    </div>
+    <h1 class="landing-title">
+      <span class="title-line">See inside any</span>
+      <span class="title-gradient" id="typewriter"></span>
+      <span class="cursor-blink">|</span>
+    </h1>
+    <p class="landing-sub">Deep repository analytics &middot; Live animated badges &middot; Contributor insights &middot; Real-time progress</p>
+    <div class="landing-search">
+      <div class="search-container">
+        <div class="search-icon-wrap">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        </div>
+        <input type="text" id="heroInput" placeholder="Enter any GitHub repository URL..." spellcheck="false" autocomplete="off">
+        <button id="heroBtn" class="search-go">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </button>
       </div>
-      <button id="analyzeBtn" class="btn-primary">Analyze</button>
     </div>
-    <div class="nav-right">
-      <span id="tokenInfo" class="token-badge"></span>
-      <div id="userArea"></div>
-      <button id="settingsBtn" class="btn-gh" title="Settings">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-      </button>
-      <button id="loginBtn" class="btn-gh btn-github"><svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg> Sign in with GitHub</button>
-    </div>
-  </div>
-</nav>
-
-<div id="landing" class="landing">
-  <div class="hero">
-    <div class="hero-badge">v1.0 &middot; Go &middot; Vanilla JS</div>
-    <h1 class="hero-title">See inside any <span class="gradient-text">GitHub repository</span></h1>
-    <p class="hero-sub">Commit frequency &middot; Contributor insights &middot; Bus factor &middot; Language breakdown &middot; SVG badges</p>
-    <div class="hero-search">
-      <div class="hero-input-wrap">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-        <input type="text" id="heroInput" placeholder="https://github.com/torvalds/linux" spellcheck="false">
-      </div>
-      <button id="heroBtn" class="btn-primary btn-lg">Analyze Repository</button>
-    </div>
-    <div class="hero-suggestions">
-      <span>Try:</span>
-      <button class="chip" data-repo="https://github.com/mayank-dev-15/mayank-dev-15">mayank-dev-15/profile</button>
+    <div class="landing-chips">
+      <span class="chip-label">Popular:</span>
       <button class="chip" data-repo="https://github.com/torvalds/linux">torvalds/linux</button>
       <button class="chip" data-repo="https://github.com/facebook/react">facebook/react</button>
+      <button class="chip" data-repo="https://github.com/microsoft/vscode">microsoft/vscode</button>
+      <button class="chip" data-repo="https://github.com/golang/go">golang/go</button>
+      <button class="chip" data-repo="https://github.com/rust-lang/rust">rust-lang/rust</button>
+    </div>
+    <div class="landing-stats" id="landingStats">
+      <div class="ls-item">
+        <span class="ls-num" data-target="189">0</span>
+        <span class="ls-label">Repos Analyzed</span>
+      </div>
+      <div class="ls-divider"></div>
+      <div class="ls-item">
+        <span class="ls-num" data-target="10">0</span>
+        <span class="ls-label">Badge Types</span>
+      </div>
+      <div class="ls-divider"></div>
+      <div class="ls-item">
+        <span class="ls-num" data-target="3">0</span>
+        <span class="ls-label">Chart Types</span>
+      </div>
+      <div class="ls-divider"></div>
+      <div class="ls-item">
+        <span class="ls-num" data-target="100">0</span>
+        <span class="ls-label">% Offline</span>
+      </div>
     </div>
   </div>
 
-  <div class="features">
-    <div class="feature-card glass" style="animation-delay:0.1s">
-      <div class="feature-icon">📊</div>
+  <div class="features-grid" id="featuresGrid">
+    <div class="fcard" data-delay="0">
+      <div class="fcard-glow"></div>
+      <div class="fcard-icon">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 20V10M18 20V4M6 20v-4"/></svg>
+      </div>
       <h3>Commit Analytics</h3>
-      <p>Weekly commit frequency, top contributors, additions and deletions tracked across the entire history.</p>
+      <p>Weekly commit frequency, additions/deletions, top contributors with real commit counts.</p>
     </div>
-    <div class="feature-card glass" style="animation-delay:0.2s">
-      <div class="feature-icon">🧠</div>
+    <div class="fcard" data-delay="100">
+      <div class="fcard-glow"></div>
+      <div class="fcard-icon">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+      </div>
       <h3>Bus Factor</h3>
-      <p>Know your bus factor — the minimum number of contributors owning 50% of the codebase. Higher is safer.</p>
+      <p>Minimum contributors owning 50% of the codebase. Higher means safer project health.</p>
     </div>
-    <div class="feature-card glass" style="animation-delay:0.3s">
-      <div class="feature-icon">🔤</div>
+    <div class="fcard" data-delay="200">
+      <div class="fcard-glow"></div>
+      <div class="fcard-icon">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 2a10 10 0 0 1 0 20"/><path d="M12 2c3 3 4.5 6.5 4.5 10S15 19 12 22"/><line x1="2" y1="12" x2="22" y2="12"/></svg>
+      </div>
       <h3>Language Breakdown</h3>
-      <p>Visual breakdown of languages by byte count. See exactly what makes up your codebase.</p>
+      <p>Interactive donut chart and animated progress bars for language distribution.</p>
     </div>
-    <div class="feature-card glass" style="animation-delay:0.4s">
-      <div class="feature-icon">🏷️</div>
-      <h3>Live Badges</h3>
-      <p>Embeddable SVG badges for your README showing stars, forks, issues and language at a glance.</p>
+    <div class="fcard" data-delay="300">
+      <div class="fcard-glow"></div>
+      <div class="fcard-icon">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+      </div>
+      <h3>Radar Metrics</h3>
+      <p>8-axis star graph showing repo health across stars, forks, commits, releases, and more.</p>
+    </div>
+    <div class="fcard" data-delay="400">
+      <div class="fcard-glow"></div>
+      <div class="fcard-icon">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
+      </div>
+      <h3>Animated Badges</h3>
+      <p>10 GIF badge types with Comic Sans MS, cloud-hosted on imgbb for GitHub READMEs.</p>
+    </div>
+    <div class="fcard" data-delay="500">
+      <div class="fcard-glow"></div>
+      <div class="fcard-icon">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+      </div>
+      <h3>Real-time Progress</h3>
+      <p>SSE-powered live progress bar with colored stage logs during analysis and uploads.</p>
     </div>
   </div>
 </div>
 
-<main id="dashboard" style="display:none">
-  <div class="dash-header">
-    <div>
-      <h2 id="repoName" class="slide-up"></h2>
-      <p id="repoDesc" class="repo-desc slide-up"></p>
+<!-- ===== DASHBOARD ===== -->
+<div id="dashboard" style="display:none">
+  <nav class="dash-nav glass">
+    <a href="/" class="dash-logo">◈ GitViz</a>
+    <div class="dash-search-wrap">
+      <input type="text" id="repoInput" placeholder="github.com/user/repo" spellcheck="false">
+      <button id="analyzeBtn" class="search-go-sm">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </button>
     </div>
-    <div class="dash-header-right">
-      <button id="newAnalysisBtn" class="btn-gh">+ New Analysis</button>
+    <div class="dash-nav-right">
+      <span id="tokenInfo" class="token-badge"></span>
+      <div id="userArea"></div>
+      <button id="settingsBtn" class="nav-icon-btn" title="Settings">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      </button>
+      <button id="loginBtn" class="nav-icon-btn github-btn">
+        <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+      </button>
+      <button id="newAnalysisBtn" class="nav-icon-btn" title="New Analysis" style="display:none">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+      </button>
     </div>
-  </div>
+  </nav>
 
+  <!-- Loading -->
   <div id="loading" class="loading-panel" style="display:none">
     <div class="loading-card glass">
-      <div class="loading-orb"></div>
+      <div class="loading-orb"><div class="orb-ring"></div><div class="orb-ring r2"></div></div>
       <div class="loading-title" id="loadingTitle">Analyzing repository...</div>
-      <div class="progress-track">
-        <div class="progress-fill" id="progressFill"></div>
-        <div class="progress-glow" id="progressGlow"></div>
-      </div>
+      <div class="progress-track"><div class="progress-fill" id="progressFill"></div><div class="progress-glow" id="progressGlow"></div></div>
       <div class="progress-percent" id="progressPercent">0%</div>
-      <div class="log-panel" id="logPanel">
-        <div class="log-header">
-          <span class="log-dot green"></span>
-          <span class="log-dot yellow"></span>
-          <span class="log-dot red"></span>
-          <span class="log-title">Live Output</span>
-        </div>
+      <div class="log-panel">
+        <div class="log-header"><span class="ldot g"></span><span class="ldot y"></span><span class="ldot r"></span><span class="log-title-text">Live Output</span></div>
         <div class="log-body" id="logBody"></div>
       </div>
     </div>
   </div>
 
+  <!-- Repo Header -->
+  <div id="repoHeader" class="repo-header" style="display:none">
+    <div class="rh-left">
+      <h2 id="repoName" class="rh-name"></h2>
+      <p id="repoDesc" class="rh-desc"></p>
+      <div class="rh-meta" id="repoMeta"></div>
+    </div>
+    <div class="rh-right">
+      <a id="repoLink" href="#" target="_blank" class="rh-link">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+        Open on GitHub
+      </a>
+    </div>
+  </div>
+
+  <!-- Stats -->
   <section id="statsGrid" class="stats-grid"></section>
 
+  <!-- Charts Row 1 -->
   <div class="charts-row">
     <section class="chart-card glass" id="langSection">
       <h3 class="section-title">Language Breakdown</h3>
-      <canvas id="langChart" width="500" height="260"></canvas>
+      <div id="langBars"></div>
+      <canvas id="langChart" width="500" height="280"></canvas>
     </section>
     <section class="chart-card glass" id="starSection">
-      <h3 class="section-title">Repo Metrics</h3>
-      <canvas id="starChart" width="500" height="260"></canvas>
-    </section>
-    <section class="chart-card glass" id="commitSection">
-      <h3 class="section-title">Commit Activity</h3>
-      <canvas id="commitChart" width="500" height="220"></canvas>
+      <h3 class="section-title">Repo Health Radar</h3>
+      <canvas id="starChart" width="500" height="280"></canvas>
     </section>
   </div>
 
+  <!-- Charts Row 2 -->
+  <div class="charts-row">
+    <section class="chart-card glass" id="commitSection">
+      <h3 class="section-title">Commit Activity</h3>
+      <canvas id="commitChart" width="800" height="240"></canvas>
+    </section>
+  </div>
+
+  <!-- Contributors + Releases -->
   <div class="charts-row">
     <section class="chart-card glass wide" id="contribSection">
       <div class="section-header">
@@ -140,75 +213,72 @@
     </section>
   </div>
 
+  <!-- Badges -->
   <section class="chart-card glass" id="embedSection">
-    <h3 class="section-title">Embed Badges for README</h3>
-    <p class="section-desc">Click any badge to copy the embed code. Download individual SVGs or grab all at once.</p>
-
+    <h3 class="section-title">Embed Badges</h3>
+    <p class="section-desc">Click any badge to copy embed code. Upload all to imgbb for permanent hosting.</p>
     <div class="badge-grid" id="badgeGrid"></div>
-
     <div class="badge-actions">
-      <button id="uploadAllBtn" class="btn-gh btn-upload">
+      <button id="uploadAllBtn" class="btn-action btn-upload-all">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
         Upload All to imgbb
       </button>
-      <button id="downloadAllBtn" class="btn-gh">
+      <button id="downloadAllBtn" class="btn-action">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
         Download All SVGs
       </button>
-      <button id="copyAllBtn" class="btn-gh">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <button id="copyAllBtn" class="btn-action">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
         Copy All Embed Codes
       </button>
     </div>
+    <!-- Upload Progress -->
+    <div id="uploadProgress" class="upload-progress-panel" style="display:none">
+      <div class="up-header"><span class="ldot g"></span><span class="ldot y"></span><span class="ldot r"></span><span class="up-title-text">Uploading Badges</span></div>
+      <div class="up-body" id="uploadLogBody"></div>
+      <div class="up-progress-track"><div class="up-progress-fill" id="uploadProgressFill"></div></div>
+      <div class="up-percent" id="uploadPercent">0 / 0</div>
+    </div>
     <div id="uploadStatus" class="upload-status" style="display:none"></div>
-
     <div class="code-block" style="margin-top:16px">
       <code id="embedCode"></code>
-      <button id="copyBtn" class="btn-gh btn-sm">Copy</button>
+      <button id="copyBtn" class="btn-action btn-sm">Copy</button>
     </div>
     <div id="badgePreview" class="badge-preview"></div>
   </section>
-</main>
+</div>
 
 <!-- Settings Modal -->
 <div id="settingsModal" class="modal-overlay" style="display:none">
   <div class="modal glass">
     <div class="modal-header">
       <h3>Settings</h3>
-      <button id="closeSettingsBtn" class="btn-gh btn-sm">&times;</button>
+      <button id="closeSettingsBtn" class="modal-close">&times;</button>
     </div>
-    <p class="section-desc">Configure your API keys and tokens. All values are stored locally on your machine in <code>settings.json</code> and never sent anywhere except the respective APIs.</p>
-
+    <p class="section-desc">Configure API keys. Stored locally in <code>settings.json</code>.</p>
     <div class="settings-group">
       <label class="settings-label">GitHub Personal Access Token</label>
       <p class="settings-hint">Required. Generate at <a href="https://github.com/settings/tokens" target="_blank">github.com/settings/tokens</a>. Needs <code>repo</code> scope.</p>
       <input type="password" id="settingsToken" class="settings-input" placeholder="ghp_xxxxxxxxxxxx">
     </div>
-
     <div class="settings-group">
-      <label class="settings-label">GitHub OAuth App Client ID</label>
-      <p class="settings-hint">Optional. Required only for "Sign in with GitHub" feature. Create at <a href="https://github.com/settings/developers" target="_blank">github.com/settings/developers</a>.</p>
+      <label class="settings-label">GitHub OAuth Client ID</label>
+      <p class="settings-hint">Optional. For "Sign in with GitHub".</p>
       <input type="text" id="settingsClientID" class="settings-input" placeholder="Iv23ctNGwnaty0r1PcMy">
     </div>
-
     <div class="settings-group">
-      <label class="settings-label">GitHub OAuth App Client Secret</label>
-      <p class="settings-hint">Optional. Paired with the Client ID above.</p>
-      <input type="password" id="settingsClientSecret" class="settings-input" placeholder="eb9f403eded7a31b9a6ec1fdbfd1b78deff491c0">
+      <label class="settings-label">GitHub OAuth Client Secret</label>
+      <input type="password" id="settingsClientSecret" class="settings-input" placeholder="eb9f403...">
     </div>
-
     <div class="settings-group">
       <label class="settings-label">imgbb API Key</label>
-      <p class="settings-hint">Optional. For uploading badges to the cloud. Get free key at <a href="https://api.imgbb.com/" target="_blank">api.imgbb.com</a>.</p>
-      <input type="password" id="settingsImgBB" class="settings-input" placeholder="529c9d39ee222cb3215338cf3e5a1969">
+      <p class="settings-hint">Optional. For cloud badge hosting. Get free at <a href="https://api.imgbb.com/" target="_blank">api.imgbb.com</a>.</p>
+      <input type="password" id="settingsImgBB" class="settings-input" placeholder="529c9d...">
     </div>
-
     <div class="settings-group">
       <label class="settings-label">Server Port</label>
-      <p class="settings-hint">Default: 8080</p>
       <input type="text" id="settingsPort" class="settings-input" placeholder="8080">
     </div>
-
     <div class="settings-actions">
       <button id="saveSettingsBtn" class="btn-primary">Save Settings</button>
       <span id="settingsStatus" class="settings-status"></span>

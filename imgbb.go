@@ -206,7 +206,10 @@ func handleBadgeUploadAll(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	publishProgress("upload", "Preparing badge generation...", 0)
+
 	if imgbbAPIKey == "" {
+		publishError("IMGBB_API_KEY not configured")
 		writeError(w, "IMGBB_API_KEY not configured on server", 500)
 		return
 	}
@@ -221,11 +224,14 @@ func handleBadgeUploadAll(w http.ResponseWriter, r *http.Request) {
 			token = githubToken
 		}
 		if token == "" {
+			publishError("no token available")
 			writeError(w, "no token available", 400)
 			return
 		}
+		publishProgress("fetch", "Fetching repository data for badge generation...", 5)
 		data, err = fetchRepoData(owner, repo, token)
 		if err != nil {
+			publishError("fetch failed: " + err.Error())
 			writeError(w, "fetch failed", 502)
 			return
 		}
@@ -235,16 +241,24 @@ func handleBadgeUploadAll(w http.ResponseWriter, r *http.Request) {
 	types := []string{"overview", "stars", "forks", "issues", "language", "commits", "contributors", "bus-factor", "activity", "health"}
 	embedURL := fmt.Sprintf("https://github.com/%s/%s", owner, repo)
 	var results []namedBadge
+	total := len(types)
 
-	for _, t := range types {
+	for i, t := range types {
+		percent := int(float64(i) / float64(total) * 100)
+		publishProgress("generate", fmt.Sprintf("Generating %s badge GIF (%d/%d)...", t, i+1, total), percent)
+
 		gifBytes, err := generateGIFBadge(buildGIFBadge(data, t))
 		if err != nil {
+			publishProgress("generate", fmt.Sprintf("Failed to generate %s badge: %s", t, err.Error()), percent)
 			continue
 		}
+
+		publishProgress("imgbb", fmt.Sprintf("Uploading %s badge to imgbb...", t), percent+3)
 
 		filename := fmt.Sprintf("gitviz-%s-%s", repo, t)
 		d, err := uploadToImgBB(gifBytes, filename)
 		if err != nil {
+			publishProgress("imgbb", fmt.Sprintf("Upload failed for %s: %s", t, err.Error()), percent+3)
 			continue
 		}
 
@@ -259,8 +273,12 @@ func handleBadgeUploadAll(w http.ResponseWriter, r *http.Request) {
 			HTML: html,
 		})
 
+		publishProgress("imgbb", fmt.Sprintf("Uploaded %s → %s", t, d.URL), percent+5)
 		time.Sleep(200 * time.Millisecond)
 	}
+
+	publishProgress("done", fmt.Sprintf("All %d badges uploaded successfully!", len(results)), 100)
+	publishDone()
 
 	writeJSON(w, batchUploadResult{Badges: results})
 }
