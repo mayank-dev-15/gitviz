@@ -383,11 +383,11 @@ function showProfile(data){
     var thRow=document.querySelector('#contribTable thead tr');
     if(thRow)thRow.innerHTML='<th></th><th>Repository</th><th>Language</th><th>Stars</th><th>Forks</th><th>Status</th>';
     contribBody.innerHTML='';
-    var sorted=data.repos.slice().sort(function(a,b){return b.stars-a.stars}).slice(0,30);
+    var sorted=data.repos.slice().sort(function(a,b){return b.stargazers_count-a.stargazers_count}).slice(0,30);
     sorted.forEach(function(r,i){
       var row=document.createElement('tr');row.className='contrib-row';row.style.animationDelay=(i*60)+'ms';
       var langColor=langColors2&&langColors2[r.language]?langColors2[r.language]:'#8b949e';
-      row.innerHTML='<td style="color:#58a6ff;font-weight:600">'+esc(r.name)+'</td><td><span style="color:'+langColor+'">'+esc(r.language||'-')+'</span></td><td>⭐ '+r.stars+'</td><td style="color:#3fb950">🍴 '+r.forks+'</td><td>'+(r.is_fork?'<span style="color:#d29922">fork</span>':r.is_archived?'<span style="color:#f85149">archived</span>':'<span style="color:#3fb950">active</span>')+'</td>';
+      row.innerHTML='<td></td><td style="color:#58a6ff;font-weight:600"><a href="'+esc(r.html_url)+'" target="_blank" style="color:inherit;text-decoration:none">'+esc(r.name)+'</a></td><td><span style="color:'+langColor+'">'+esc(r.language||'-')+'</span></td><td>⭐ '+r.stargazers_count+'</td><td style="color:#3fb950">🍴 '+r.forks_count+'</td><td>'+(r.fork?'<span style="color:#d29922">fork</span>':r.archived?'<span style="color:#f85149">archived</span>':'<span style="color:#3fb950">active</span>')+'</td>';
       contribBody.appendChild(row);
     });
     var bfBadge=$('busFactorBadge');
@@ -582,8 +582,6 @@ window.addEventListener('resize',function(){
     if(currentData&&currentData.stats.weekly_commits){drawCommitChart(currentData.stats.weekly_commits)}
   },200);
 });
-  draw();
-}
 
 // ===== Radar Chart =====
 function drawStarGraph(data,stats){
