@@ -105,27 +105,123 @@
     </div>
   </div>
 
-  <div class="author-section">
-    <div class="author-card glass">
-      <img src="https://avatars.githubusercontent.com/mayank-dev-15" alt="mayank-dev-15" class="author-avatar" loading="lazy">
-      <div class="author-info">
-        <h3 class="author-name">Mayank Basena</h3>
-        <p class="author-handle">@mayank-dev-15</p>
-        <p class="author-bio">Building things that break, then fixing them. Security researcher, systems engineer, open-source enthusiast.</p>
-        <div class="author-links">
-          <a href="https://github.com/mayank-dev-15" target="_blank" class="author-link">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
-            GitHub
-          </a>
-          <a href="https://github.com/mayank-dev-15?tab=repositories" target="_blank" class="author-link">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-6l-2-2H5a2 2 0 0 0-2 2z"/></svg>
-            Repositories
-          </a>
-          <a href="https://github.com/mayank-dev-15/gitviz" target="_blank" class="author-link">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
-            This Project
-          </a>
+  <div class="about-section" id="aboutSection">
+    <canvas id="aboutCanvas" class="about-canvas"></canvas>
+    <div class="about-glow-orb orb-1"></div>
+    <div class="about-glow-orb orb-2"></div>
+    <div class="about-glow-orb orb-3"></div>
+
+    <div class="about-inner">
+      <div class="about-hero">
+        <div class="about-avatar-wrap">
+          <div class="about-avatar-ring"></div>
+          <div class="about-avatar-ring r2"></div>
+          <div class="about-avatar-ring r3"></div>
+          <img src="https://avatars.githubusercontent.com/mayank-dev-15" alt="Mayank Basena" class="about-avatar" loading="lazy">
+          <div class="about-status"><span class="about-status-dot"></span> Available for hire</div>
         </div>
+        <div class="about-hero-text">
+          <div class="about-eyebrow">The Developer Behind GitViz</div>
+          <h1 class="about-name">Mayank Basena</h1>
+          <p class="about-handle">@mayank-dev-15</p>
+          <p class="about-tagline">I don't just write code. I architect <span class="about-highlight">systems that think</span>, tools that <span class="about-highlight">break and rebuild themselves</span>, and open-source projects that <span class="about-highlight">other people actually use</span>.</p>
+          <div class="about-actions">
+            <a href="https://github.com/mayank-dev-15" target="_blank" class="about-btn primary">
+              <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+              View GitHub Profile
+            </a>
+            <a href="#featuresGrid" class="about-btn secondary">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+              Explore GitViz
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <div class="about-stats-row">
+        <div class="about-stat">
+          <span class="about-stat-num" data-count="191">0</span>
+          <span class="about-stat-label">Public Repos</span>
+          <div class="about-stat-bar"><div class="about-stat-fill" data-w="85%"></div></div>
+        </div>
+        <div class="about-stat">
+          <span class="about-stat-num" data-count="184">0</span>
+          <span class="about-stat-label">Stars Earned</span>
+          <div class="about-stat-bar"><div class="about-stat-fill" data-w="70%"></div></div>
+        </div>
+        <div class="about-stat">
+          <span class="about-stat-num" data-count="7">0</span>
+          <span class="about-stat-label">Languages</span>
+          <div class="about-stat-bar"><div class="about-stat-fill" data-w="60%"></div></div>
+        </div>
+        <div class="about-stat">
+          <span class="about-stat-num" data-count="6">0</span>
+          <span class="about-stat-label">Followers</span>
+          <div class="about-stat-bar"><div class="about-stat-fill" data-w="40%"></div></div>
+        </div>
+      </div>
+
+      <div class="about-grid">
+        <div class="about-card">
+          <div class="about-card-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#58a6ff" stroke-width="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          </div>
+          <h3 class="about-card-title">Security Researcher</h3>
+          <p class="about-card-desc">Building AI-powered intrusion detection, autonomous pentesting agents, and vulnerability scanners. I find bugs so you don't have to.</p>
+          <div class="about-card-tags">
+            <span class="about-tag">ShadowSentinel</span>
+            <span class="about-tag">AI-Pentest</span>
+            <span class="about-tag">CVE Hunter</span>
+          </div>
+        </div>
+        <div class="about-card">
+          <div class="about-card-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#f0883e" stroke-width="1.5"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+          </div>
+          <h3 class="about-card-title">Systems Engineer</h3>
+          <p class="about-card-desc">Go backends, real-time data pipelines, SSE-powered dashboards. I build tools that handle millions of events without breaking a sweat.</p>
+          <div class="about-card-tags">
+            <span class="about-tag">Go</span>
+            <span class="about-tag">SysGuard</span>
+            <span class="about-tag">GitViz</span>
+          </div>
+        </div>
+        <div class="about-card">
+          <div class="about-card-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#a371f7" stroke-width="1.5"><path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+          </div>
+          <h3 class="about-card-title">Open Source Builder</h3>
+          <p class="about-card-desc">191 repositories across Go, Rust, Python, TypeScript. Neural playgrounds, compilers, crypto libraries, and more. All public. All free.</p>
+          <div class="about-card-tags">
+            <span class="about-tag">191 Repos</span>
+            <span class="about-tag">MIT License</span>
+            <span class="about-tag">Zero Dependencies</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="about-tech">
+        <h3 class="about-tech-title">Tech Stack & Specializations</h3>
+        <div class="about-tech-grid">
+          <div class="about-tech-item"><span class="about-tech-dot" style="background:#00ADD8"></span>Go</div>
+          <div class="about-tech-item"><span class="about-tech-dot" style="background:#dea584"></span>Rust</div>
+          <div class="about-tech-item"><span class="about-tech-dot" style="background:#3572A5"></span>Python</div>
+          <div class="about-tech-item"><span class="about-tech-dot" style="background:#f1e05a"></span>JavaScript</div>
+          <div class="about-tech-item"><span class="about-tech-dot" style="background:#3178c6"></span>TypeScript</div>
+          <div class="about-tech-item"><span class="about-tech-dot" style="background:#555555"></span>C/C++</div>
+          <div class="about-tech-item"><span class="about-tech-dot" style="background:#e34c26"></span>HTML/CSS</div>
+          <div class="about-tech-item"><span class="about-tech-dot" style="background:#89e051"></span>Shell</div>
+          <div class="about-tech-item"><span class="about-tech-dot" style="background:#f85149"></span>Cybersecurity</div>
+          <div class="about-tech-item"><span class="about-tech-dot" style="background:#a371f7"></span>AI/ML</div>
+          <div class="about-tech-item"><span class="about-tech-dot" style="background:#3fb950"></span>DevOps</div>
+          <div class="about-tech-item"><span class="about-tech-dot" style="background:#f0883e"></span>Linux</div>
+        </div>
+      </div>
+
+      <div class="about-quote">
+        <div class="about-quote-mark">"</div>
+        <p class="about-quote-text">The best code is the code that doesn't exist. The second best is the code someone else can understand.</p>
+        <div class="about-quote-attr">— Mayank Basena</div>
       </div>
     </div>
   </div>

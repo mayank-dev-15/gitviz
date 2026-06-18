@@ -90,6 +90,69 @@ function setupReveal(){
 }
 setupReveal();
 
+// ===== About Section Canvas =====
+var aboutCanvas=$('aboutCanvas');
+if(aboutCanvas){
+  var actx=aboutCanvas.getContext('2d');
+  var aW,aH,aParticles=[];
+  function resizeAbout(){aW=aboutCanvas.width=aboutCanvas.offsetWidth;aH=aboutCanvas.height=aboutCanvas.offsetHeight}
+  resizeAbout();window.addEventListener('resize',resizeAbout);
+  for(var i=0;i<40;i++){
+    aParticles.push({
+      x:Math.random()*aW,y:Math.random()*aH,
+      vx:(Math.random()-.5)*.2,vy:(Math.random()-.5)*.2,
+      r:Math.random()*1.2+.4,a:Math.random()*.3+.05,
+      hue:Math.random()*60+200
+    });
+  }
+  function animAbout(){
+    actx.clearRect(0,0,aW,aH);
+    aParticles.forEach(function(p){
+      p.x+=p.vx;p.y+=p.vy;
+      if(p.x<0)p.x=aW;if(p.x>aW)p.x=0;if(p.y<0)p.y=aH;if(p.y>aH)p.y=0;
+      actx.beginPath();actx.arc(p.x,p.y,p.r,0,Math.PI*2);
+      actx.fillStyle='hsla('+p.hue+',60%,65%,'+p.a+')';actx.fill();
+    });
+    for(var a=0;a<aParticles.length;a++){
+      for(var b=a+1;b<aParticles.length;b++){
+        var dx=aParticles[a].x-aParticles[b].x,dy=aParticles[a].y-aParticles[b].y;
+        var dist=Math.sqrt(dx*dx+dy*dy);
+        if(dist<100){
+          actx.beginPath();actx.moveTo(aParticles[a].x,aParticles[a].y);
+          actx.lineTo(aParticles[b].x,aParticles[b].y);
+          actx.strokeStyle='rgba(88,166,255,'+(1-dist/100)*.08+')';
+          actx.lineWidth=.4;actx.stroke();
+        }
+      }
+    }
+    requestAnimationFrame(animAbout);
+  }
+  animAbout();
+}
+
+// ===== About Stats Counter =====
+var aboutObs=new IntersectionObserver(function(entries){
+  entries.forEach(function(e){
+    if(e.isIntersecting){
+      e.target.querySelectorAll('.about-stat-num').forEach(function(el){
+        var target=parseInt(el.getAttribute('data-count'),10);
+        if(isNaN(target))return;
+        var current=0;var step=Math.max(1,Math.floor(target/40));
+        var iv=setInterval(function(){
+          current+=step;if(current>=target){current=target;clearInterval(iv)}
+          el.textContent=current;
+        },25);
+      });
+      e.target.querySelectorAll('.about-stat-fill').forEach(function(el){
+        var w=el.getAttribute('data-w');
+        if(w)setTimeout(function(){el.style.width=w},200);
+      });
+      aboutObs.unobserve(e.target);
+    }
+  });
+},{threshold:.3});
+document.querySelectorAll('.about-stats-row').forEach(function(el){aboutObs.observe(el)});
+
 // ===== Button Ripple =====
 document.addEventListener('click',function(e){
   var btn=e.target.closest('button');if(!btn)return;
