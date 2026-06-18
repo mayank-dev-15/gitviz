@@ -39,13 +39,15 @@ type ProfileRepo struct {
 	Name        string `json:"name"`
 	FullName    string `json:"full_name"`
 	Description string `json:"description"`
-	Stars       int    `json:"stars"`
-	Forks       int    `json:"forks"`
+	Stars       int    `json:"stargazers_count"`
+	Forks       int    `json:"forks_count"`
 	Language    string `json:"language"`
 	UpdatedAt   string `json:"updated_at"`
 	HTMLURL     string `json:"html_url"`
-	IsFork      bool   `json:"is_fork"`
-	IsArchived  bool   `json:"is_archived"`
+	IsFork      bool   `json:"fork"`
+	IsArchived  bool   `json:"archived"`
+	OpenIssues  int    `json:"open_issues_count"`
+	Watchers    int    `json:"watchers_count"`
 }
 
 type ActivityEvent struct {
@@ -121,6 +123,8 @@ func fetchProfileData(username, token string) (*ProfileData, error) {
 			for _, r := range repos {
 				profile.TotalStars += r.Stars
 				profile.TotalForks += r.Forks
+				profile.TotalWatchers += r.Watchers
+				profile.TotalIssues += r.OpenIssues
 				if r.Language != "" {
 					langMap[r.Language] += 1
 				}

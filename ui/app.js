@@ -318,6 +318,11 @@ function showProfile(data){
   newAnalysisBtn.style.display='flex';
   clearError();
 
+  // Hide sections that don't apply to profiles
+  var commitSection=$('commitSection');if(commitSection)commitSection.parentElement.style.display='none';
+  var starSection=$('starSection');if(starSection)starSection.style.display='none';
+  var embedSection=$('embedSection');if(embedSection)embedSection.style.display='none';
+
   repoName.textContent='@'+data.login;
   repoDesc.textContent=data.bio||'No bio';
   repoLink.href=data.html_url;
@@ -332,6 +337,8 @@ function showProfile(data){
   repoMeta.innerHTML=meta;
 
   // Avatar
+  var existingAvatar=repoHeader.querySelector('.profile-avatar');
+  if(existingAvatar)existingAvatar.remove();
   var avatarDiv=document.createElement('div');
   avatarDiv.className='profile-avatar';
   avatarDiv.innerHTML='<img src="'+esc(data.avatar_url)+'" alt="'+esc(data.login)+'">';
@@ -342,8 +349,8 @@ function showProfile(data){
     {icon:'📦',label:'Public Repos',value:data.public_repos,detail:data.public_repos+' public repositories'},
     {icon:'⭐',label:'Total Stars',value:data.total_stars,detail:'Earned across '+data.public_repos+' repos'},
     {icon:'🍴',label:'Total Forks',value:data.total_forks,detail:'Forked across '+data.public_repos+' repos'},
+    {icon:'❗',label:'Total Issues',value:data.total_issues,detail:data.total_issues+' open issues across repos'},
     {icon:'👥',label:'Followers',value:data.followers,detail:data.followers+' followers | Following: '+data.following},
-    {icon:'👤',label:'Following',value:data.following,detail:'Following '+data.following+' users'},
     {icon:'📝',label:'Public Gists',value:data.public_gists,detail:data.public_gists+' public gists'},
   ];
   statsGrid.innerHTML='';
@@ -358,9 +365,11 @@ function showProfile(data){
     setTimeout(function(){animateCount(numEl,s.value)},200+i*60);
   });
 
-  // Language bars
+  // Language bars + donut chart
+  var langSection=$('langSection');
+  if(langSection)langSection.style.display='';
   if(data.top_languages&&data.top_languages.length){
-    var langColors2={Go:'#00ADD8',JavaScript:'#f1e05a',TypeScript:'#3178c6',Python:'#3572A5',Java:'#b07219',Rust:'#dea584',C:'#555555','C++':'#f34b7d',Ruby:'#701516',PHP:'#4F5D95',Swift:'#F05138',Kotlin:'#A97BFF',Dart:'#00B4AB',Shell:'#89e051',HTML:'#e34c26',CSS:'#563d7c',Vue:'#41b883',Svelte:'#ff3e00',Scala:'#c22d40',Haskell:'#5e5086',R:'#198CE7',Lua:'#000080',Nim:'#ffc200',Zig:'#ec915c',Elixir:'#6e4a7e'};
+    var langColors2={Go:'#00ADD8',JavaScript:'#f1e05a',TypeScript:'#3178c6',Python:'#3572A5',Java:'#b07219',Rust:'#dea584',C:'#555555','C++':'#f34b7d',Ruby:'#701516',PHP:'#4F5D95',Swift:'#F05138',Kotlin:'#A97BFF',Dart:'#00B4AB',Shell:'#89e051',HTML:'#e34c26',CSS:'#563d7c',Vue:'#41b883',Svelte:'#ff3e00',Scala:'#c22d40',Haskell:'#5e5086',R:'#198CE7',Lua:'#000080',Nim:'#ffc200',Zig:'#ec915c',Elixir:'#6e4a7e',PLpgSQL:'#336791',Cuda:'#3A4E3A',Assembly:'#6E4C13',Makefile:'#427819',Dockerfile:'#384d54',Nix:'#7e7eff',PowerShell:'#012456',Ruby:'#701516'};
     var langs=[];
     data.top_languages.forEach(function(l){langs.push({name:l.name,bytes:1,pct:l.pct,color:langColors2[l.name]||'#8b949e'})});
     drawLangChart(langs);
@@ -368,37 +377,38 @@ function showProfile(data){
   }
 
   // Repos table
+  var contribSection=$('contribSection');
+  if(contribSection)contribSection.style.display='';
   if(data.repos&&data.repos.length){
-    contribBody.innerHTML='';
-    var sorted=data.repos.slice().sort(function(a,b){return b.stars-a.stars}).slice(0,20);
-    sorted.forEach(function(r,i){
-      var row=document.createElement('tr');row.className='contrib-row';row.style.animationDelay=(i*60)+'ms';
-      row.innerHTML='<td style="color:#58a6ff;font-weight:600">'+esc(r.name)+'</td><td><a class="login" href="'+esc(r.html_url)+'" target="_blank">'+esc(r.language||'-')+'</a></td><td>⭐ '+r.stars+'</td><td style="color:#3fb950">🍴 '+r.forks+'</td><td>'+(r.is_fork?'<span style="color:#d29922">fork</span>':'')+'</td><td>'+(r.is_archived?'<span style="color:#f85149">archived</span>':'')+'</td>';
-      contribBody.appendChild(row);
-    });
     var thRow=document.querySelector('#contribTable thead tr');
     if(thRow)thRow.innerHTML='<th></th><th>Repository</th><th>Language</th><th>Stars</th><th>Forks</th><th>Status</th>';
+    contribBody.innerHTML='';
+    var sorted=data.repos.slice().sort(function(a,b){return b.stars-a.stars}).slice(0,30);
+    sorted.forEach(function(r,i){
+      var row=document.createElement('tr');row.className='contrib-row';row.style.animationDelay=(i*60)+'ms';
+      var langColor=langColors2&&langColors2[r.language]?langColors2[r.language]:'#8b949e';
+      row.innerHTML='<td style="color:#58a6ff;font-weight:600">'+esc(r.name)+'</td><td><span style="color:'+langColor+'">'+esc(r.language||'-')+'</span></td><td>⭐ '+r.stars+'</td><td style="color:#3fb950">🍴 '+r.forks+'</td><td>'+(r.is_fork?'<span style="color:#d29922">fork</span>':r.is_archived?'<span style="color:#f85149">archived</span>':'<span style="color:#3fb950">active</span>')+'</td>';
+      contribBody.appendChild(row);
+    });
     var bfBadge=$('busFactorBadge');
     if(bfBadge){bfBadge.textContent=data.public_repos+' repos';bfBadge.className='bus-badge good'}
   }
 
   // Recent activity
+  var releaseSection=$('releaseSection');
+  if(releaseSection)releaseSection.style.display='';
+  var sectionTitle=document.querySelector('#releaseSection .section-title');
+  if(sectionTitle)sectionTitle.textContent='Recent Activity';
   if(data.recent_activity&&data.recent_activity.length){
     releaseList.innerHTML='';
-    data.recent_activity.slice(0,15).forEach(function(e,i){
+    data.recent_activity.slice(0,20).forEach(function(e,i){
       var item=document.createElement('div');item.className='rel-item';item.style.animationDelay=(i*40)+'ms';
       var d=e.created_at?new Date(e.created_at).toLocaleDateString():'';
-      var icon='📝';if(e.type==='PushEvent')icon='🔀';if(e.type==='CreateEvent')icon='✨';if(e.type==='IssuesEvent')icon='❗';if(e.type==='WatchEvent')icon='⭐';
-      item.innerHTML='<a class="rel-name" href="https://github.com/'+esc(e.repo)+'" target="_blank">'+icon+' '+esc(e.repo)+'</a><div class="rel-right"><span class="rel-tag">'+esc(e.type)+'</span><span class="rel-date">'+d+'</span></div>';
+      var icon='📝';if(e.type==='PushEvent')icon='🔀';if(e.type==='CreateEvent')icon='✨';if(e.type==='IssuesEvent')icon='❗';if(e.type==='WatchEvent')icon='⭐';if(e.type==='DeleteEvent')icon='🗑️';if(e.type==='PullRequestEvent')icon='🔀';if(e.type==='ReleaseEvent')icon='📦';if(e.type==='ForkEvent')icon='🍴';
+      item.innerHTML='<a class="rel-name" href="https://github.com/'+esc(e.repo)+'" target="_blank">'+icon+' '+esc(e.repo)+'</a><div class="rel-right"><span class="rel-tag">'+esc(e.type.replace('Event',''))+'</span><span class="rel-date">'+d+'</span></div>';
       releaseList.appendChild(item);
     });
-    var sectionTitle=document.querySelector('#releaseSection .section-title');
-    if(sectionTitle)sectionTitle.textContent='Recent Activity';
   }
-
-  // No embed badges for profiles
-  var embedSection=$('embedSection');
-  if(embedSection)embedSection.style.display='none';
 
   setupReveal();
   window.scrollTo({top:0,behavior:'smooth'});
@@ -456,46 +466,122 @@ function renderLangBars(langs){
 function drawLangChart(langs){
   var canvas=langCanvas,ctx2=canvas.getContext('2d');
   var dpr=window.devicePixelRatio||1;
-  canvas.width=canvas.offsetWidth*dpr;canvas.height=280*dpr;
+  var container=canvas.parentElement;
+  var W=container.clientWidth-48;
+  if(W<200)W=200;
+  canvas.style.width=W+'px';
+  canvas.style.height='280px';
+  canvas.width=W*dpr;canvas.height=280*dpr;
   ctx2.scale(dpr,dpr);
-  var W=canvas.offsetWidth,H=280;
-  var cx=W/2,cy=H/2,R=Math.min(W,H)/2-30,r=R*.55;
+  var H=280;
+  var cx=W/2,cy=H/2-10,R=Math.min(W,H)/2-40,r=R*.55;
   if(!langs||!langs.length)return;
 
   var total=langs.reduce(function(a,b){return a+b.bytes},0);
-  var angle=-Math.PI/2;
   var animProgress=0;
+  var hoveredIdx=-1;
+  var sliceAngles=[];
 
   function draw(){
     ctx2.clearRect(0,0,W,H);
     var currentAngle=-Math.PI/2;
-    langs.forEach(function(l){
+    sliceAngles=[];
+
+    for(var i=0;i<langs.length;i++){
+      var l=langs[i];
       var sweep=(l.bytes/total)*Math.PI*2*animProgress;
-      ctx2.beginPath();ctx2.moveTo(cx+r*Math.cos(currentAngle),cy+r*Math.sin(currentAngle));
-      ctx2.arc(cx,cy,R,currentAngle,currentAngle+sweep);
-      ctx2.arc(cx,cy,r,currentAngle+sweep,currentAngle,true);
+      var isHovered=(i===hoveredIdx);
+      var expandR=isHovered?8:0;
+      var drawR=R+expandR;
+      var drawR2=r-expandR/2;
+      if(drawR2<0)drawR2=0;
+
+      sliceAngles.push({start:currentAngle,end:currentAngle+sweep,lang:l});
+
+      ctx2.beginPath();
+      ctx2.arc(cx,cy,drawR,currentAngle,currentAngle+sweep);
+      ctx2.arc(cx,cy,drawR2,currentAngle+sweep,currentAngle,true);
       ctx2.closePath();
-      ctx2.fillStyle=l.color;ctx2.fill();
+      ctx2.fillStyle=l.color;
+      if(isHovered){ctx2.shadowColor=l.color;ctx2.shadowBlur=20}
+      ctx2.fill();
+      ctx2.shadowBlur=0;
+
+      // Label line for large slices
+      if(sweep>0.3&&animProgress>=1){
+        var midAngle=currentAngle+sweep/2;
+        var labelR=drawR+14;
+        var lx=cx+labelR*Math.cos(midAngle);
+        var ly=cy+labelR*Math.sin(midAngle);
+        ctx2.fillStyle='#c9d1d9';ctx2.font='bold 11px Inter,system-ui';
+        ctx2.textAlign=midAngle>Math.PI/2&&midAngle<Math.PI*1.5?'right':'left';
+        ctx2.textBaseline='middle';
+        ctx2.fillText(l.name,lx,ly);
+      }
+
       currentAngle+=sweep;
-    });
+    }
+
     // Center hole
     ctx2.beginPath();ctx2.arc(cx,cy,r-1,0,Math.PI*2);
-    ctx2.fillStyle='rgba(13,17,23,.9)';ctx2.fill();
+    ctx2.fillStyle='rgba(13,17,23,.92)';ctx2.fill();
+
     // Center text
-    ctx2.fillStyle='#f0f6fc';ctx2.font='bold 22px Inter,system-ui';ctx2.textAlign='center';ctx2.textBaseline='middle';
+    ctx2.fillStyle='#f0f6fc';ctx2.font='bold 24px Inter,system-ui';ctx2.textAlign='center';ctx2.textBaseline='middle';
     ctx2.fillText(langs.length,cx,cy-8);
     ctx2.fillStyle='#8b949e';ctx2.font='12px Inter,system-ui';
-    ctx2.fillText('languages',cx,cy+12);
+    ctx2.fillText('languages',cx,cy+14);
+
     // Legend
-    var lx=W-140,ly=20;
-    langs.forEach(function(l){
+    var lx=W-150,ly=16;
+    ctx2.textAlign='left';
+    for(var i=0;i<langs.length;i++){
+      var l=langs[i];
+      var isHov=(i===hoveredIdx);
       ctx2.fillStyle=l.color;ctx2.fillRect(lx,ly,10,10);
-      ctx2.fillStyle='#c9d1d9';ctx2.font='11px Inter,system-ui';ctx2.textAlign='left';
+      ctx2.fillStyle=isHov?'#f0f6fc':'#8b949e';ctx2.font=(isHov?'bold ':'')+' 11px Inter,system-ui';
       ctx2.fillText(l.name+' '+l.pct.toFixed(0)+'%',lx+16,ly+9);
       ly+=20;
-    });
-    if(animProgress<1){animProgress+=.03;requestAnimationFrame(draw)}
+    }
+
+    if(animProgress<1){animProgress+=.025;requestAnimationFrame(draw)}
   }
+
+  // Hover detection
+  canvas.onmousemove=function(e){
+    var rect=canvas.getBoundingClientRect();
+    var mx=(e.clientX-rect.left)*(W/rect.width);
+    var my=(e.clientY-rect.top)*(H/rect.height);
+    var dx=mx-cx,dy=my-cy;
+    var dist=Math.sqrt(dx*dx+dy*dy);
+    if(dist>r&&dist<R+10){
+      var angle=Math.atan2(dy,dx);
+      if(angle<-Math.PI/2)angle+=Math.PI*2;
+      for(var i=0;i<sliceAngles.length;i++){
+        var s=sliceAngles[i];
+        if(angle>=s.start&&angle<=s.end){
+          if(hoveredIdx!==i){hoveredIdx=i;draw()}
+          showTooltip(e,s.lang.name+': '+s.lang.pct.toFixed(1)+'%');
+          return;
+        }
+      }
+    }
+    if(hoveredIdx!==-1){hoveredIdx=-1;draw();hideTooltip()}
+  };
+  canvas.onmouseleave=function(){hoveredIdx=-1;draw();hideTooltip()};
+
+  draw();
+}
+
+// Resize handler for all charts
+window.addEventListener('resize',function(){
+  clearTimeout(window._chartResizeTimer);
+  window._chartResizeTimer=setTimeout(function(){
+    if(currentData&&currentData.languages){drawLangChart(currentData.languages)}
+    if(currentData&&currentData.stats){drawStarGraph(currentData,currentData.stats)}
+    if(currentData&&currentData.stats.weekly_commits){drawCommitChart(currentData.stats.weekly_commits)}
+  },200);
+});
   draw();
 }
 
@@ -503,9 +589,14 @@ function drawLangChart(langs){
 function drawStarGraph(data,stats){
   var canvas=starCanvas,ctx2=canvas.getContext('2d');
   var dpr=window.devicePixelRatio||1;
-  canvas.width=canvas.offsetWidth*dpr;canvas.height=280*dpr;
+  var container=canvas.parentElement;
+  var W=container.clientWidth-48;
+  if(W<200)W=200;
+  canvas.style.width=W+'px';
+  canvas.style.height='280px';
+  canvas.width=W*dpr;canvas.height=280*dpr;
   ctx2.scale(dpr,dpr);
-  var W=canvas.offsetWidth,H=280;
+  var H=280;
   var cx=W/2,cy=H/2,R=Math.min(W,H)/2-40;
 
   var metrics=[
@@ -575,13 +666,22 @@ function drawStarGraph(data,stats){
 function drawCommitChart(weeks){
   var canvas=commitCanvas,ctx2=canvas.getContext('2d');
   var dpr=window.devicePixelRatio||1;
-  canvas.width=canvas.offsetWidth*dpr;canvas.height=240*dpr;
+  var container=canvas.parentElement;
+  var W=container.clientWidth-48;
+  if(W<300)W=300;
+  canvas.style.width=W+'px';
+  canvas.style.height='240px';
+  canvas.width=W*dpr;canvas.height=240*dpr;
   ctx2.scale(dpr,dpr);
-  var W=canvas.offsetWidth,H=240;
+  var H=240;
   var pad={t:20,r:20,b:40,l:50};
   var cw=W-pad.l-pad.r,ch=H-pad.t-pad.b;
 
-  if(!weeks||!weeks.length)return;
+  if(!weeks||!weeks.length){
+    ctx2.fillStyle='#484f58';ctx2.font='14px Inter,system-ui';ctx2.textAlign='center';
+    ctx2.fillText('No commit activity data',W/2,H/2);
+    return;
+  }
   var maxC=Math.max.apply(null,weeks.map(function(w){return w.commits}));if(maxC===0)maxC=1;
   var step=cw/(weeks.length-1||1);
   var animP=0;
@@ -858,6 +958,8 @@ function init(){
     newAnalysisBtn.style.display='none';repoHeader.style.display='none';
     loading.style.display='none';
     var embedSection=$('embedSection');if(embedSection)embedSection.style.display='';
+    var commitSection=$('commitSection');if(commitSection)commitSection.parentElement.style.display='';
+    var starSection=$('starSection');if(starSection)starSection.style.display='';
     var avatars=document.querySelectorAll('.profile-avatar');avatars.forEach(function(a){a.remove()});
     var thRow=document.querySelector('#contribTable thead tr');
     if(thRow)thRow.innerHTML='<th></th><th>Contributor</th><th>Commits</th><th>Added</th><th>Deleted</th><th>Share</th>';
