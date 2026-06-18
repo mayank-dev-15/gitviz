@@ -1,77 +1,86 @@
-# GitViz
+██╗  ██╗██╗████████╗██╗   ██╗██╗███████╗
+██║  ██║██║╚══██╔══╝██║   ██║██║╚══███╔╝
+███████║██║   ██║   ██║   ██║██║  ███╔╝ 
+██╔══██║██║   ██║   ╚██╗ ██╔╝██║ ███╔╝  
+██║  ██║██║   ██║    ╚████╔╝ ██║███████╗
+╚═╝  ╚═╝╚═╝   ╚═╝     ╚═══╝  ╚═╝╚══════╝
 
-Real-time GitHub repository analytics dashboard. Enter any public repo URL and get commit frequency, contributor breakdown, language distribution, bus factor analysis, and embeddable SVG badges for your README.
-
-No database needed. No JavaScript framework. Single Go binary.
+Real-time GitHub repository analytics dashboard. Single Go binary, zero runtime dependencies.
 
 ## Features
 
-- **Repo overview** — stars, forks, open issues, PRs, license, primary language
-- **Language breakdown** — bar chart of languages by byte count
-- **Commit activity** — weekly commit frequency chart from last 100 commits
-- **Top contributors** — sorted by commit count with additions/deletions and ownership percentage
-- **Bus factor** — minimum contributors needed to account for 50% of all code changes
-- **Recent releases** — latest releases with timestamps
-- **SVG badge** — embeddable live stats badge for any README
-- **GitHub OAuth** — login to increase API rate limit from 60 to 5000 requests/hour
-- **Token mode** — set `GITHUB_TOKEN` env var to skip OAuth setup
+- **Live stats** — stars, forks, open issues, PRs, license, language
+- **Commit analytics** — weekly frequency chart, additions/deletions, top contributors
+- **Bus factor** — minimum contributors owning 50% of the codebase
+- **Language breakdown** — color-coded bar chart by byte count
+- **SVG badges** — embeddable live badges for any README
+- **GitHub OAuth** — sign in with GitHub to browse your repos (like Vercel)
+- **Animated UI** — glassmorphism design, canvas charts, shimmer loading, count-up animations
 
 ## Quick start
 
 ```bash
-# Set a GitHub token (get one at https://github.com/settings/tokens)
+# Set a GitHub personal access token (get one at github.com/settings/tokens)
 export GITHUB_TOKEN=ghp_xxxxxxxxxxxxxxxxxxxx
 
-# Run the server
+# Run
 ./gitviz
 
 # Open http://localhost:8080
 ```
 
-Without a token, the GitHub API limits you to 60 unauthenticated requests per hour. With a token, you get 5000/hour.
+Without a token, GitHub limits you to 60 unauthenticated API requests/hour. With a token, 5000/hour.
 
-## Setup OAuth (optional)
+## OAuth setup (optional, for "Sign in with GitHub")
 
-1. Go to https://github.com/settings/developers and create a new OAuth App
-2. Set Homepage URL to `http://localhost:8080`
-3. Set Authorization callback URL to `http://localhost:8080/auth/callback`
-4. Run with:
+1. Go to **https://github.com/settings/developers** → **OAuth Apps** → **New OAuth App**
+2. Fill:
+   - **Application name:** `GitViz`
+   - **Homepage URL:** `http://localhost:8080`
+   - **Authorization callback URL:** `http://localhost:8080/auth/callback`
+3. Register, then copy the **Client ID** and **Client Secret**
 
 ```bash
 export GITHUB_CLIENT_ID=your_client_id
 export GITHUB_CLIENT_SECRET=your_client_secret
-export GITHUB_TOKEN=your_token   # fallback for badge generation
+export GITHUB_TOKEN=your_token     # fallback for unauthenticated API calls
 ./gitviz
 ```
+
+When you click **Sign in with GitHub**, it redirects to GitHub for authorization, then fetches your repos and lists them on the landing page. Click any repo to analyze it.
 
 ## API
 
 | Endpoint | Description |
 |----------|-------------|
-| `GET /` | Dashboard UI |
-| `GET /api/repo?url=https://github.com/user/repo` | Repository analytics (JSON) |
-| `GET /api/badge?url=https://github.com/user/repo` | SVG badge for README |
+| `GET /` | Dashboard UI (animated landing + analytics) |
+| `GET /api/repo?url=https://github.com/user/repo` | Full repository analytics (JSON) |
+| `GET /api/user/repos` | List authenticated user's public repos (requires OAuth or token) |
+| `GET /api/badge?url=https://github.com/user/repo` | SVG badge image for READMEs |
 | `GET /api/user` | Current auth status |
-| `GET /auth/github` | Start OAuth login |
+| `GET /auth/github` | Start OAuth login flow |
 | `GET /api/logout` | Logout |
 
-### Badge embed
-
-Add this to any README:
+### Badge embed for README
 
 ```markdown
 [![GitViz](http://your-server:8080/api/badge?url=https://github.com/user/repo)](https://github.com/user/repo)
 ```
 
-## How bus factor works
+## Build from source
 
-The bus factor answers: *"How many contributors would need to be hit by a bus before the project is in trouble?"*
+```bash
+go build -ldflags="-s -w" -o gitviz.exe .
+```
 
-It counts the minimum number of top contributors whose combined code changes (additions + deletions) reach 50% of the project total. A bus factor of 1 means a single person owns the majority of the code.
+Produces a ~7 MB standalone binary.
 
 ## Tech
 
-Single Go binary, zero runtime dependencies. Uses the GitHub GraphQL API (single query fetches all data). Frontend is vanilla JS with Canvas 2D charts.
+- **Backend:** Go (stdlib only — `net/http`, `encoding/json`, `crypto`)
+- **Frontend:** Vanilla JS (Canvas 2D charts, CSS animations, glassmorphism)
+- **API:** GitHub GraphQL (single query fetches all repo data)
+- **Auth:** GitHub OAuth (signed cookies, no external deps)
 
 ## License
 

@@ -225,6 +225,7 @@ func main() {
 	mux.HandleFunc("GET /auth/github", handleAuthRedirect)
 	mux.HandleFunc("GET /auth/callback", handleAuthCallback)
 	mux.HandleFunc("GET /api/user", handleUser)
+	mux.HandleFunc("GET /api/user/repos", handleUserRepos)
 	mux.HandleFunc("GET /api/repo", handleRepo)
 	mux.HandleFunc("GET /api/badge", handleBadge)
 	mux.HandleFunc("GET /api/logout", handleLogout)
@@ -390,6 +391,80 @@ func handleLogout(w http.ResponseWriter, r *http.Request) {
 	}
 	http.SetCookie(w, &http.Cookie{Name: "gv_session", Value: "", Path: "/", MaxAge: -1})
 	http.Redirect(w, r, "/", 302)
+}
+
+func handleUserRepos(w http.ResponseWriter, r *http.Request) {
+	var token string
+	sid := getSessionID(r)
+	if sid != "" {
+		if sess := globalStore.GetSession(sid); sess != nil {
+			token = sess.Token
+		}
+	}
+	if token == "" {
+		token = githubToken
+	}
+	if token == "" {
+		writeError(w, "not authenticated", 401)
+		return
+	}
+
+	req, _ := http.NewRequest("GET", "https://api.github.com/users/mayank-dev-15/repos?sort=updated&per_page=30", nil)
+	req.Header.Set("Authorization", "Bearer "+token)
+	req.Header.Set("User-Agent", "GitViz")
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		writeError(w, "github request failed: "+err.Error(), 502)
+		return
+	}
+	defer resp.Body.Close()
+
+	body, _ := io.ReadAll(resp.Body)
+	if resp.StatusCode != 200 {
+		writeError(w, "github: "+string(body), resp.StatusCode)
+		return
+	}
+
+	var repos []map[string]interface{}
+	if err := json.Unmarshal(body, &repos); err != nil {
+		writeError(w, "bad response", 502)
+		return
+	}
+
+	type repoBrief struct {
+		Name        string `json:"name"`
+		FullName    string `json:"full_name"`
+		Description string `json:"description"`
+		Stars       int    `json:"stars"`
+		Forks       int    `json:"forks"`
+		Language    string `json:"language"`
+		UpdatedAt   string `json:"updated_at"`
+		HTMLURL     string `json:"html_url"`
+		Private     bool   `json:"private"`
+		Fork        bool   `json:"fork"`
+	}
+
+	result := make([]repoBrief, 0, len(repos))
+	for _, r := range repos {
+		desc, _ := r["description"].(string)
+		lang, _ := r["language"].(string)
+		updated, _ := r["updated_at"].(string)
+		url, _ := r["html_url"].(string)
+		name, _ := r["name"].(string)
+		full, _ := r["full_name"].(string)
+		stars, _ := r["stargazers_count"].(float64)
+		forks, _ := r["forks_count"].(float64)
+		priv, _ := r["private"].(bool)
+		fork, _ := r["fork"].(bool)
+		result = append(result, repoBrief{
+			Name: name, FullName: full, Description: desc,
+			Stars: int(stars), Forks: int(forks), Language: lang,
+			UpdatedAt: updated, HTMLURL: url, Private: priv, Fork: fork,
+		})
+	}
+
+	writeJSON(w, result)
 }
 
 func parseRepoURL(raw string) (string, string, error) {
