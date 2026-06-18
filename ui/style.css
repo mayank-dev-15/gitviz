@@ -604,6 +604,40 @@ tr:hover .avatar{transform:scale(1.25) rotate(-8deg);border-color:#58a6ff}
 .settings-status.success{color:#3fb950}
 .settings-status.error{color:#f85149}
 
+/* ===== Tooltip ===== */
+.gv-tooltip{
+  position:fixed;z-index:9999;
+  padding:8px 14px;border-radius:8px;
+  background:rgba(13,17,23,.95);border:1px solid rgba(255,255,255,.1);
+  color:#e1e4e8;font-size:12px;font-weight:500;
+  pointer-events:none;white-space:nowrap;
+  box-shadow:0 8px 24px rgba(0,0,0,.5);
+  animation:fadeIn .15s ease;
+}
+
+/* ===== Stat Card Tooltips ===== */
+.stat-card{cursor:default}
+.stat-card[data-tip]{cursor:help}
+
+/* ===== Badge Image Loading ===== */
+.badge-item-preview{min-height:40px;display:flex;align-items:center;justify-content:center}
+.badge-item-preview img{
+  max-width:100%;height:auto;
+  transition:opacity .4s,transform .3s;
+}
+.badge-item-preview img:not([src]){opacity:.3}
+
+/* ===== Chart Tooltip ===== */
+.chart-tooltip{
+  position:absolute;z-index:50;
+  padding:8px 12px;border-radius:8px;
+  background:rgba(13,17,23,.95);border:1px solid rgba(88,166,255,.2);
+  color:#e1e4e8;font-size:11px;
+  pointer-events:none;white-space:nowrap;
+  box-shadow:0 4px 16px rgba(0,0,0,.5);
+  transition:opacity .15s;
+}
+
 /* ===== Responsive ===== */
 @media(max-width:768px){
   .features-grid{grid-template-columns:1fr}
