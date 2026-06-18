@@ -29,44 +29,32 @@
         <div class="search-icon-wrap">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
         </div>
-        <input type="text" id="heroInput" placeholder="Enter any GitHub repository URL..." spellcheck="false" autocomplete="off">
+        <input type="text" id="heroInput" placeholder="Enter a GitHub repo URL or username..." spellcheck="false" autocomplete="off">
         <button id="heroBtn" class="search-go">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
         </button>
       </div>
     </div>
-    <div class="landing-chips">
-      <span class="chip-label">Popular:</span>
+    <div class="hero-suggestions">
+      <span>Repos:</span>
       <button class="chip" data-repo="https://github.com/torvalds/linux">torvalds/linux</button>
       <button class="chip" data-repo="https://github.com/facebook/react">facebook/react</button>
       <button class="chip" data-repo="https://github.com/microsoft/vscode">microsoft/vscode</button>
       <button class="chip" data-repo="https://github.com/golang/go">golang/go</button>
-      <button class="chip" data-repo="https://github.com/rust-lang/rust">rust-lang/rust</button>
+      <span class="chip-divider">|</span>
+      <span>Profiles:</span>
+      <button class="chip chip-profile" data-profile="torvalds">torvalds</button>
+      <button class="chip chip-profile" data-profile="facebook">facebook</button>
+      <button class="chip chip-profile" data-profile="golang">golang</button>
     </div>
-    <div class="landing-stats" id="landingStats">
-      <div class="ls-item">
-        <span class="ls-num" data-target="189">0</span>
-        <span class="ls-label">Repos Analyzed</span>
-      </div>
-      <div class="ls-divider"></div>
-      <div class="ls-item">
-        <span class="ls-num" data-target="10">0</span>
-        <span class="ls-label">Badge Types</span>
-      </div>
-      <div class="ls-divider"></div>
-      <div class="ls-item">
-        <span class="ls-num" data-target="3">0</span>
-        <span class="ls-label">Chart Types</span>
-      </div>
-      <div class="ls-divider"></div>
-      <div class="ls-item">
-        <span class="ls-num" data-target="100">0</span>
-        <span class="ls-label">% Offline</span>
+    <div class="landing-cta">
+      <div class="cta-key">
+        <kbd>Ctrl</kbd>+<kbd>K</kbd> to search anytime
       </div>
     </div>
   </div>
 
-  <div class="features-grid" id="featuresGrid">
+    <div class="features-grid" id="featuresGrid">
     <div class="fcard" data-delay="0">
       <div class="fcard-glow"></div>
       <div class="fcard-icon">
@@ -78,10 +66,10 @@
     <div class="fcard" data-delay="100">
       <div class="fcard-glow"></div>
       <div class="fcard-icon">
-        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
       </div>
-      <h3>Bus Factor</h3>
-      <p>Minimum contributors owning 50% of the codebase. Higher means safer project health.</p>
+      <h3>Profile Analysis</h3>
+      <p>Full GitHub account stats — total stars earned, followers, top languages, contribution streak.</p>
     </div>
     <div class="fcard" data-delay="200">
       <div class="fcard-glow"></div>
@@ -104,8 +92,8 @@
       <div class="fcard-icon">
         <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
       </div>
-      <h3>Animated Badges</h3>
-      <p>10 GIF badge types with Comic Sans MS, cloud-hosted on imgbb for GitHub READMEs.</p>
+      <h3>Glitch Badges</h3>
+      <p>Hacker-aesthetic animated GIF badges with matrix rain, scanlines, and CRT glitch effects.</p>
     </div>
     <div class="fcard" data-delay="500">
       <div class="fcard-glow"></div>

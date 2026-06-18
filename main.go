@@ -227,6 +227,7 @@ func main() {
 	mux.HandleFunc("GET /api/user", handleUser)
 	mux.HandleFunc("GET /api/user/repos", handleUserRepos)
 	mux.HandleFunc("GET /api/repo", handleRepo)
+	mux.HandleFunc("GET /api/profile", handleProfile)
 	mux.HandleFunc("GET /api/badge", handleBadge)
 	mux.HandleFunc("GET /api/badge/live", handleLiveBadge)
 	mux.HandleFunc("GET /api/badge/gif", handleGIFBadge)

@@ -76,20 +76,6 @@ function typeAnim(){
 }
 typeAnim();
 
-// ===== Landing Stats Counter =====
-function animateLandingStats(){
-  var nums=document.querySelectorAll('.ls-num');
-  nums.forEach(function(el){
-    var target=parseInt(el.dataset.target)||0;
-    var current=0;var step=Math.max(1,Math.floor(target/50));
-    var iv=setInterval(function(){
-      current+=step;if(current>=target){current=target;clearInterval(iv)}
-      el.textContent=current;
-    },25);
-  });
-}
-animateLandingStats();
-
 // ===== Scroll Reveal =====
 function setupReveal(){
   document.querySelectorAll('.fcard').forEach(function(el,i){
@@ -248,11 +234,44 @@ async function analyze(url){
 
 function triggerAnalyze(url){
   if(!url)return;
+  url=url.trim();
+  // Detect username-only input (no slash, not a URL)
+  if(url.match(/^[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?$/) && !url.includes('/')){
+    analyzeProfile(url);
+    return;
+  }
   if(!url.match(/github\.com\//)){
     if(url.match(/^[\w.-]+\/[\w.-]+$/)){url='https://github.com/'+url}
-    else{showError('Enter a GitHub URL or "user/repo" format');return}
+    else{showError('Enter a GitHub URL, "user/repo", or a username');return}
   }
   analyze(url);
+}
+
+async function analyzeProfile(username){
+  loading.style.display='block';
+  clearError();
+  dashboard.style.display='block';
+  landing.style.display='none';
+  repoHeader.style.display='none';
+  newAnalysisBtn.style.display='none';
+  statsGrid.innerHTML='';
+  if(langBars)langBars.innerHTML='';
+  contribBody.innerHTML='';
+  releaseList.innerHTML='';
+  var badgeGrid2=$('badgeGrid');if(badgeGrid2)badgeGrid2.innerHTML='';
+
+  var pf=$('progressFill'),pg=$('progressGlow'),pp=$('progressPercent'),lt=$('loadingTitle'),lb=$('logBody');
+  if(pf)pf.style.width='0%';if(pg)pg.style.width='0%';if(pp)pp.textContent='0%';
+  if(lb)lb.innerHTML='';if(lt)lt.textContent='Analyzing profile...';
+
+  var sse=connectSSE();
+  try{
+    var data=await api('/api/profile?username='+encodeURIComponent(username));
+    showProfile(data);
+  }catch(e){
+    loading.style.display='none';
+    showError(e.message);
+  }
 }
 
 // ===== Show Dashboard =====
@@ -285,6 +304,102 @@ function showDashboard(data){
   renderContributors(data.stats.authors);
   renderReleases(data.releases);
   renderEmbed(data);
+  setupReveal();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ===== Show Profile =====
+function showProfile(data){
+  currentData=null;
+  landing.style.display='none';
+  dashboard.style.display='block';
+  loading.style.display='none';
+  repoHeader.style.display='flex';
+  newAnalysisBtn.style.display='flex';
+  clearError();
+
+  repoName.textContent='@'+data.login;
+  repoDesc.textContent=data.bio||'No bio';
+  repoLink.href=data.html_url;
+
+  var meta='';
+  if(data.name)meta+='<span class="rh-tag">'+esc(data.name)+'</span>';
+  if(data.location)meta+='<span class="rh-tag">📍 '+esc(data.location)+'</span>';
+  if(data.company)meta+='<span class="rh-tag">🏢 '+esc(data.company)+'</span>';
+  if(data.account_age)meta+='<span class="rh-tag">🕐 '+esc(data.account_age)+'</span>';
+  meta+='<span class="rh-tag">'+data.public_repos+' repos</span>';
+  meta+='<span class="rh-tag">'+data.followers+' followers</span>';
+  repoMeta.innerHTML=meta;
+
+  // Avatar
+  var avatarDiv=document.createElement('div');
+  avatarDiv.className='profile-avatar';
+  avatarDiv.innerHTML='<img src="'+esc(data.avatar_url)+'" alt="'+esc(data.login)+'">';
+  repoHeader.querySelector('.rh-left').insertBefore(avatarDiv,repoHeader.querySelector('.rh-left').firstChild);
+
+  // Stats
+  var stats=[
+    {icon:'📦',label:'Public Repos',value:data.public_repos,detail:data.public_repos+' public repositories'},
+    {icon:'⭐',label:'Total Stars',value:data.total_stars,detail:'Earned across '+data.public_repos+' repos'},
+    {icon:'🍴',label:'Total Forks',value:data.total_forks,detail:'Forked across '+data.public_repos+' repos'},
+    {icon:'👥',label:'Followers',value:data.followers,detail:data.followers+' followers | Following: '+data.following},
+    {icon:'👤',label:'Following',value:data.following,detail:'Following '+data.following+' users'},
+    {icon:'📝',label:'Public Gists',value:data.public_gists,detail:data.public_gists+' public gists'},
+  ];
+  statsGrid.innerHTML='';
+  stats.forEach(function(s,i){
+    var card=document.createElement('div');card.className='stat-card';card.style.animationDelay=(i*60)+'ms';
+    card.setAttribute('data-tip',s.detail);
+    card.innerHTML='<span class="stat-icon">'+s.icon+'</span><span class="stat-number" data-target="'+s.value+'">0</span><span class="stat-label">'+s.label+'</span>';
+    card.addEventListener('mouseenter',function(e){showTooltip(e,s.detail)});
+    card.addEventListener('mouseleave',hideTooltip);
+    statsGrid.appendChild(card);
+    var numEl=card.querySelector('.stat-number');
+    setTimeout(function(){animateCount(numEl,s.value)},200+i*60);
+  });
+
+  // Language bars
+  if(data.top_languages&&data.top_languages.length){
+    var langColors2={Go:'#00ADD8',JavaScript:'#f1e05a',TypeScript:'#3178c6',Python:'#3572A5',Java:'#b07219',Rust:'#dea584',C:'#555555','C++':'#f34b7d',Ruby:'#701516',PHP:'#4F5D95',Swift:'#F05138',Kotlin:'#A97BFF',Dart:'#00B4AB',Shell:'#89e051',HTML:'#e34c26',CSS:'#563d7c',Vue:'#41b883',Svelte:'#ff3e00',Scala:'#c22d40',Haskell:'#5e5086',R:'#198CE7',Lua:'#000080',Nim:'#ffc200',Zig:'#ec915c',Elixir:'#6e4a7e'};
+    var langs=[];
+    data.top_languages.forEach(function(l){langs.push({name:l.name,bytes:1,pct:l.pct,color:langColors2[l.name]||'#8b949e'})});
+    drawLangChart(langs);
+    renderLangBars(langs);
+  }
+
+  // Repos table
+  if(data.repos&&data.repos.length){
+    contribBody.innerHTML='';
+    var sorted=data.repos.slice().sort(function(a,b){return b.stars-a.stars}).slice(0,20);
+    sorted.forEach(function(r,i){
+      var row=document.createElement('tr');row.className='contrib-row';row.style.animationDelay=(i*60)+'ms';
+      row.innerHTML='<td style="color:#58a6ff;font-weight:600">'+esc(r.name)+'</td><td><a class="login" href="'+esc(r.html_url)+'" target="_blank">'+esc(r.language||'-')+'</a></td><td>⭐ '+r.stars+'</td><td style="color:#3fb950">🍴 '+r.forks+'</td><td>'+(r.is_fork?'<span style="color:#d29922">fork</span>':'')+'</td><td>'+(r.is_archived?'<span style="color:#f85149">archived</span>':'')+'</td>';
+      contribBody.appendChild(row);
+    });
+    var thRow=document.querySelector('#contribTable thead tr');
+    if(thRow)thRow.innerHTML='<th></th><th>Repository</th><th>Language</th><th>Stars</th><th>Forks</th><th>Status</th>';
+    var bfBadge=$('busFactorBadge');
+    if(bfBadge){bfBadge.textContent=data.public_repos+' repos';bfBadge.className='bus-badge good'}
+  }
+
+  // Recent activity
+  if(data.recent_activity&&data.recent_activity.length){
+    releaseList.innerHTML='';
+    data.recent_activity.slice(0,15).forEach(function(e,i){
+      var item=document.createElement('div');item.className='rel-item';item.style.animationDelay=(i*40)+'ms';
+      var d=e.created_at?new Date(e.created_at).toLocaleDateString():'';
+      var icon='📝';if(e.type==='PushEvent')icon='🔀';if(e.type==='CreateEvent')icon='✨';if(e.type==='IssuesEvent')icon='❗';if(e.type==='WatchEvent')icon='⭐';
+      item.innerHTML='<a class="rel-name" href="https://github.com/'+esc(e.repo)+'" target="_blank">'+icon+' '+esc(e.repo)+'</a><div class="rel-right"><span class="rel-tag">'+esc(e.type)+'</span><span class="rel-date">'+d+'</span></div>';
+      releaseList.appendChild(item);
+    });
+    var sectionTitle=document.querySelector('#releaseSection .section-title');
+    if(sectionTitle)sectionTitle.textContent='Recent Activity';
+  }
+
+  // No embed badges for profiles
+  var embedSection=$('embedSection');
+  if(embedSection)embedSection.style.display='none';
+
   setupReveal();
   window.scrollTo({top:0,behavior:'smooth'});
 }
@@ -735,10 +850,19 @@ function init(){
   document.querySelectorAll('.chip[data-repo]').forEach(function(el){
     el.addEventListener('click',function(){triggerAnalyze(el.dataset.repo)});
   });
+  document.querySelectorAll('.chip[data-profile]').forEach(function(el){
+    el.addEventListener('click',function(){analyzeProfile(el.dataset.profile)});
+  });
   newAnalysisBtn.addEventListener('click',function(){
     dashboard.style.display='none';landing.style.display='flex';landing.style.flexDirection='column';landing.style.alignItems='center';
     newAnalysisBtn.style.display='none';repoHeader.style.display='none';
     loading.style.display='none';
+    var embedSection=$('embedSection');if(embedSection)embedSection.style.display='';
+    var avatars=document.querySelectorAll('.profile-avatar');avatars.forEach(function(a){a.remove()});
+    var thRow=document.querySelector('#contribTable thead tr');
+    if(thRow)thRow.innerHTML='<th></th><th>Contributor</th><th>Commits</th><th>Added</th><th>Deleted</th><th>Share</th>';
+    var sectionTitle=document.querySelector('#releaseSection .section-title');
+    if(sectionTitle)sectionTitle.textContent='Recent Releases';
     window.scrollTo({top:0,behavior:'smooth'});
   });
   loginBtn.addEventListener('click',function(){window.location.href='/auth/github'});

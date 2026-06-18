@@ -269,6 +269,8 @@ func generateGIFBadge(b gifBadge) ([]byte, error) {
 		rgba := image.NewRGBA(bounds)
 		draw.Draw(rgba, bounds, downscaled, bounds.Min, draw.Src)
 
+		applyAllGlitch(rgba, frame, gifFrames)
+
 		paletted := quantizeToPaletted(rgba)
 		frames[frame] = paletted
 		delays[frame] = gifDelay
